@@ -1134,7 +1134,35 @@ function handleFile(file){
     var data=rows.slice(4).filter(function(r){return r[1]&&String(r[1]).trim();});
     if(!data.length){er.textContent='5행부터 데이터를 입력해 주세요.';er.style.display='';return;}
     var added=0,skipped=0,warns=[],newStudents=[];
-    data.forEach(function(r){var name=String(r[1]||'').trim();if(!name){skipped++;return;}var lv=String(r[6]||'').trim(),cfg=LEVEL_CFG[lv],startSem=parseStart(String(r[5]||'').trim());var scores={},avgs={};[[8,'a1'],[9,'a2'],[10,'a3'],[11,'a4']].forEach(function(p){var v=r[p[0]];if(v!==''&&v!=null&&!isNaN(v))scores[p[1]]=parseFloat(v);});[[14,'a1'],[15,'a2'],[16,'a3'],[17,'a4']].forEach(function(p){var v=r[p[0]];if(v!==''&&v!=null&&!isNaN(v))avgs[p[1]]=parseFloat(v);});if(cfg)cfg.areas.forEach(function(a){var v=scores[a.key];if(v!=null&&v>a.max)warns.push(name+' 영역'+a.n+' 초과');});var s={id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),memberCode:String(r[0]||'').trim(),name:name,school:String(r[2]||'').trim(),grade:String(r[3]||'').trim(),testDate:excelDateToStr(r[4]),startSem:startSem,testLevel:lv,chessLevel:String(r[20]||'').trim(),className:String(r[21]||'').trim(),classTime:String(r[22]||'').trim(),teacher:String(r[23]||'').trim(),room:String(r[24]||'').trim(),notice:'',showAvg:Object.keys(avgs).length>0,showPretest:false,scores:scores,avgs:avgs,wrongSet:[],pretest:{},learningHistory:null,updatedAt:Date.now()};students.unshift(s);newStudents.push(s);added++;});
+    data.forEach(function(r){var name=String(r[1]||'').trim();if(!name){skipped++;return;}var lv=String(r[6]||'').trim(),cfg=LEVEL_CFG[lv],startSem=parseStart(String(r[5]||'').trim());
+    // 영역별 점수: H~K열(7~10)
+    var scores={},avgs={};
+    [[7,'a1'],[8,'a2'],[9,'a3'],[10,'a4']].forEach(function(p){var v=r[p[0]];if(v!==''&&v!=null&&!isNaN(v))scores[p[1]]=parseFloat(v);});
+    // 영역별 평균: L~O열(11~14)
+    [[11,'a1'],[12,'a2'],[13,'a3'],[14,'a4']].forEach(function(p){var v=r[p[0]];if(v!==''&&v!=null&&!isNaN(v))avgs[p[1]]=parseFloat(v);});
+    if(cfg)cfg.areas.forEach(function(a){var v=scores[a.key];if(v!=null&&v>a.max)warns.push(name+' 영역'+a.n+' 초과');});
+    // ★ 오답 문항: V~AR열(21~53) - 각 셀에 번호 하나씩, 빈칸 무시
+    var wrongSet=[];
+    for(var wi=21;wi<=53;wi++){
+      var wval=r[wi];
+      if(wval!==''&&wval!=null){
+        var wnum=parseInt(wval);
+        if(!isNaN(wnum)&&wnum>=1&&wnum<=33) wrongSet.push(wnum);
+      }
+    }
+    var s={id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      memberCode:String(r[0]||'').trim(),name:name,school:String(r[2]||'').trim(),
+      grade:String(r[3]||'').trim(),testDate:excelDateToStr(r[4]),startSem:startSem,
+      testLevel:lv,
+      chessLevel:String(r[15]||'').trim(),  // P열(15)
+      className:String(r[16]||'').trim(),   // Q열(16)
+      classTime:String(r[17]||'').trim(),   // R열(17)
+      teacher:String(r[18]||'').trim(),     // S열(18)
+      room:String(r[19]||'').trim(),        // T열(19)
+      notice:String(r[20]||'').trim(),      // U열(20) 안내사항
+      showAvg:Object.keys(avgs).length>0,showPretest:false,
+      scores:scores,avgs:avgs,wrongSet:wrongSet,
+      pretest:{},learningHistory:null,updatedAt:Date.now()};students.unshift(s);newStudents.push(s);added++;});
     persistAll(newStudents);renderSidebar();var msg='✓ '+added+'명 업로드 완료'+(skipped?' ('+skipped+'명 건너뜀)':'');if(warns.length)msg+='\n\n⚠ 점수 초과:\n'+warns.join('\n');ok.textContent=msg;ok.style.display='';showToast(added+'명 업로드 완료!');
     }catch(e2){er.textContent='파일 읽기 오류: '+e2.message;er.style.display='';}
   };
