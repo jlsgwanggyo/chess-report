@@ -267,7 +267,7 @@ function parseStart(raw){if(!raw)return'';var s=String(raw).trim();if(s==='즉�
 function buildStartOpts(ds,sel){sel=sel||'';if(!ds)return'';var m=new Date(ds).getMonth()+1,near=null,md=99;SEM_START.forEach(function(sm){var d=Math.abs(m-sm);if(d>6)d=12-d;if(d<=1&&d<md){md=d;near=sm;}});var ord;if(near!==null){var i=SEM_START.indexOf(near);ord=SEM_START.map(function(_,j){return SEM_START[(i+j)%4];});}else{var ci=m>=3&&m<=5?1:m>=6&&m<=8?2:m>=9&&m<=11?3:0;var ni=(ci+1)%4;ord=SEM_START.map(function(_,j){return SEM_START[(ni+j)%4];});}var sv=String(sel);return['<option value="즉시"'+(sv==='즉시'?' selected':'')+'>즉시</option>'].concat(ord.map(function(sm){return'<option value="'+sm+'"'+(sv==sm?' selected':'')+'>'+SEM_LABELS[sm]+'</option>';})).join('');}
 
 // ── Google Sheets 연동 스토리지 ───────────────────────────────
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwMkPunB2oXGVDVkpC46OQ78csCRGsy-maX4Yb-Oq05f80VCpXKGtw_DMwX8-x8HtR4/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzHtWIHXD3xsNwsq1OT1EJyzNfcamEVLFvvdd1NfrhKB-k9gWfm21UUoumsbBN0ZLof/exec';
 var _isSyncing = false;
 
 function showSyncStatus(msg, color) {
@@ -275,7 +275,11 @@ function showSyncStatus(msg, color) {
   if (el) { el.textContent = msg; el.style.color = color || '#6b7280'; }
 }
 
-// JSONP 방식으로 모든 요청 처리 (GET만 사용 → CORS 완전 우회)
+// ── Google Sheets 통신 레이어 ─────────────────────────────────
+// GET(list): JSONP 방식 → CORS 우회
+// POST(save/delete): hidden form + iframe 방식 → URL 길이 제한 우회
+
+// JSONP: 학생 목록 불러오기 전용
 function gasJsonp(params) {
   return new Promise(function(resolve) {
     var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*9999);
@@ -294,7 +298,7 @@ function gasJsonp(params) {
     var qs = 'callback=' + cbName + '&t=' + Date.now();
     Object.keys(params).forEach(function(k) {
       qs += '&' + k + '=' + encodeURIComponent(
-        typeof params[k] === 'object' ? JSON.stringify(params[k]) : params[k]
+        typeof params[k] === 'object' ? JSON.stringify(params[k]) : String(params[k])
       );
     });
     script.src = GAS_URL + '?' + qs;
@@ -306,14 +310,17 @@ function gasJsonp(params) {
     document.body.appendChild(script);
   });
 }
+
 function gasGet(url) {
   return gasJsonp({ action: 'list' });
 }
 function gasPost(data) {
+  // 저장/삭제도 JSONP GET 방식으로 처리
+  // (브라우저 URL 한계 ~8000자 >> 학생 데이터 ~2000자이므로 충분)
   var params = { action: data.action };
-  if (data.student) params.data = data.student;
-  else if (data.students) params.data = data.students;
-  else if (data.id) params.id = data.id;
+  if (data.student)  params.data = data.student;
+  if (data.students) params.data = data.students;
+  if (data.id)       params.id   = data.id;
   return gasJsonp(params);
 }
 
