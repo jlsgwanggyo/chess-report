@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHESS 입학시험 성적표 v14</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.33.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+--color-text-primary:#1a1a2e;--color-text-secondary:#6b7280;--color-text-danger:#dc2626;--color-text-warning:#d97706;--color-text-success:#16a34a;--color-text-info:#2563eb;
+--color-background-primary:#ffffff;--color-background-secondary:#f9fafb;--color-background-tertiary:#f3f4f6;--color-background-danger:#fef2f2;--color-background-warning:#fffbeb;--color-background-success:#f0fdf4;--color-background-info:#eff6ff;
+--color-border-primary:#e5e7eb;--color-border-secondary:#d1d5db;--color-border-tertiary:#f3f4f6;--color-border-danger:#fca5a5;--color-border-warning:#fcd34d;--color-border-success:#86efac;--color-border-info:#93c5fd;
+--border-radius-md:6px;--border-radius-lg:10px;
+}
+body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary);background:var(--color-background-tertiary)}
+button{font-family:var(--font-sans);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);padding:5px 10px;border-radius:var(--border-radius-md);font-size:13px;display:inline-flex;align-items:center;gap:4px}
+button:hover{background:var(--color-background-secondary)}
+input,select,textarea{font-family:var(--font-sans);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);padding:5px 8px;border-radius:var(--border-radius-md);color:var(--color-text-primary)}
+.app{display:grid;grid-template-columns:252px 1fr;min-height:100vh;background:var(--color-background-primary)}
+.sidebar{background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-primary);display:flex;flex-direction:column}
+.sidebar-header{padding:11px 13px 9px;border-bottom:0.5px solid var(--color-border-primary)}
+.sidebar-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:7px}
+.sidebar-header input{width:100%;font-size:13px}
+.student-list{flex:1;overflow-y:auto;padding:5px}
+.student-item{padding:8px 9px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid transparent;margin-bottom:2px;display:flex;align-items:flex-start;gap:7px}
+.student-item:hover{background:var(--color-background-primary)}
+.student-item.active{background:var(--color-background-primary);border-color:var(--color-border-secondary)}
+.student-cb{margin-top:3px;flex-shrink:0}
+.student-info{flex:1;min-width:0}
+.student-name{font-size:13px;font-weight:500}
+.student-meta{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.sidebar-actions{padding:9px 13px;border-top:0.5px solid var(--color-border-primary);display:flex;flex-direction:column;gap:5px}
+.btn-new{width:100%;font-size:13px;justify-content:center;padding:7px}
+.btn-upload{width:100%;font-size:13px;justify-content:center;padding:6px;background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.btn-bulk{width:100%;font-size:13px;justify-content:center;padding:6px;background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info);display:none}
+.sel-count{font-size:11px;color:var(--color-text-secondary);text-align:center;display:none}
+.main{display:flex;flex-direction:column;overflow:hidden;height:100vh}
+.topbar{display:flex;align-items:center;gap:7px;padding:9px 14px;border-bottom:0.5px solid var(--color-border-primary);flex-shrink:0}
+.topbar-title{font-size:14px;font-weight:500;flex:1}
+.btn-save{font-size:12px;padding:5px 13px;display:none}
+.btn-print-one{font-size:12px;padding:5px 11px;display:none}
+.btn-del{font-size:12px;padding:5px 8px;color:var(--color-text-danger);display:none}
+.editing-badge{font-size:11px;background:var(--color-background-warning);color:var(--color-text-warning);padding:2px 7px;border-radius:10px;border:0.5px solid var(--color-border-warning);display:none}
+.content{flex:1;overflow-y:auto;padding:12px}
+.form-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-primary);border-radius:var(--border-radius-lg);padding:11px 13px;margin-bottom:9px}
+.fs-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.4px;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:5px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:7px 11px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg label{font-size:11px;color:var(--color-text-secondary);font-weight:500}
+.fg input,.fg select,.fg textarea{font-size:12px;width:100%}
+.fg textarea{min-height:52px;resize:vertical}
+.score-hint{font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.fg-disabled{opacity:.3;pointer-events:none}
+.toggle-wrap{position:relative;width:33px;height:18px;cursor:pointer;flex-shrink:0;display:inline-block}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--color-border-primary);border-radius:20px;transition:background .15s}
+.toggle-wrap input:checked+.toggle-track{background:#2d6fb0}
+.toggle-track::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .15s}
+.toggle-wrap input:checked+.toggle-track::after{transform:translateX(15px)}
+/* Pre-Test */
+.pretest-section{border-color:#9ecf9e!important}
+.pretest-title-row{display:flex;align-items:center;gap:5px;margin-bottom:0}
+.pretest-title-text{font-size:11px;font-weight:500;color:#1a5a2a;letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:5px;flex:1}
+.pretest-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:10px}
+.pretest-left{background:#f0fbf2;border:0.5px solid #9ecf9e;border-radius:var(--border-radius-md);padding:10px 12px}
+.pretest-left-label{font-size:10px;font-weight:700;color:#2d7a4f;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+.pretest-body{display:none}
+.pretest-body.visible{display:block}
+.pretest-bar{flex:1;background:#edf2f8;border-radius:20px;height:10px;overflow:hidden}
+.pretest-bar-fill{height:100%;border-radius:20px;background:#2d7a4f;transition:width .4s}
+.pretest-pct{font-size:10px;font-weight:700;color:#2d7a4f;min-width:30px;text-align:right}
+.pretest-sel{font-size:11px;padding:4px 6px;border-radius:6px;border:0.5px solid #9ecf9e;background:#f5fbf5}
+/* 오답 */
+.wrong-grid{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.wq-btn{width:28px;height:28px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .12s;user-select:none}
+.wq-btn:hover{background:var(--color-background-primary)}
+.wq-btn.wrong{background:#e24b4a;border-color:#a32d2d;color:#fff}
+.wq-btn.disabled-extra{opacity:.4;cursor:not-allowed;border-color:#fca5a5}
+.area-badge{font-size:10px;font-weight:500;padding:1px 7px;border-radius:5px;margin-bottom:2px;display:inline-block}
+.avg-section{margin-top:9px;padding-top:9px;border-top:0.5px dashed var(--color-border-primary);display:none}
+.avg-section.visible{display:block}
+/* 로드맵 */
+.roadmap-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:3px}
+.roadmap-table th,.roadmap-table td{border:0.5px solid var(--color-border-primary);padding:5px 6px;text-align:center;vertical-align:middle}
+.roadmap-table th{background:var(--color-background-secondary);font-size:10px;font-weight:500;color:var(--color-text-secondary)}
+.lv-chip{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10px;font-weight:500}
+.lv-IS{background:#e6f1fb;color:#0c447c}.lv-DS{background:#eaf3de;color:#27500a}.lv-LS{background:#faeeda;color:#633806}.lv-MS{background:#fde4ef;color:#72243e}.lv-ACE{background:#eeedfe;color:#3c3489}
+.badge-now{display:inline-block;background:#e8a020;color:#fff;font-size:8px;font-weight:500;padding:1px 4px;border-radius:4px;margin-top:1px}
+.badge-grad{display:inline-block;background:#27500a;color:#fff;font-size:8px;font-weight:500;padding:1px 4px;border-radius:4px;margin-top:1px}
+.cell-now{background:#fff8e8}.cell-grad{background:#eaf3de}.cell-ace{background:#eeedfe}.cell-empty{background:var(--color-background-secondary)}
+/* 모달 */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:40;align-items:center;justify-content:center}
+.modal-wrap.open{display:flex}
+.modal{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-primary);padding:18px;width:450px;max-width:96%}
+.modal-title{font-size:14px;font-weight:500;margin-bottom:5px}
+.modal-sub{font-size:12px;color:var(--color-text-secondary);margin-bottom:13px;line-height:1.6}
+.drop-zone{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:22px;text-align:center;cursor:pointer;margin-bottom:10px}
+.drop-zone:hover,.drop-zone.over{background:var(--color-background-secondary)}
+.drop-zone i{font-size:22px;color:var(--color-text-secondary);display:block;margin-bottom:5px}
+.drop-zone p{font-size:12px;color:var(--color-text-secondary)}
+.drop-zone input[type=file]{display:none}
+.upload-ok{font-size:12px;padding:7px 11px;border-radius:var(--border-radius-md);background:var(--color-background-success);color:var(--color-text-success);display:none;white-space:pre-wrap;line-height:1.6;margin-bottom:8px}
+.upload-err{font-size:12px;padding:7px 11px;border-radius:var(--border-radius-md);background:var(--color-background-danger);color:var(--color-text-danger);display:none;margin-bottom:8px}
+.modal-btns{display:flex;gap:7px;justify-content:flex-end}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:360px;color:var(--color-text-secondary);gap:7px}
+.empty i{font-size:28px;opacity:.4}.empty p{font-size:13px}
+.toast{position:fixed;bottom:12px;right:12px;background:#1a3a5c;color:#fff;padding:8px 14px;border-radius:var(--border-radius-md);font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+/* 인쇄 오버레이 */
+.print-overlay{display:none;position:fixed;inset:0;background:#e8eef6;z-index:60;overflow-y:auto}
+.print-overlay.open{display:block}
+.print-toolbar{display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:0.5px solid #dde5f0;background:#f4f8fc;position:sticky;top:0;z-index:10}
+.ptoolbar-title{font-size:12px;font-weight:500;color:#1a3a5c;flex:1}
+.pbtn{padding:5px 14px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;border:none;display:flex;align-items:center;gap:4px}
+.pbtn-go{background:#1a3a5c;color:#fff}
+.pbtn-close{background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary)}
+.print-cards{padding:14px;max-width:860px;margin:0 auto}
+/* 성적표 카드 */
+.rc{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #c8d8ec;margin-bottom:14px}
+.rc-hd{background:#1a3a5c;padding:12px 20px;display:flex;align-items:center;gap:10px}
+.rc-logo{font-family:Georgia,serif;font-weight:700;font-size:22px;color:#fff;letter-spacing:1px}
+.rc-logo span{color:#4db8e8}
+.rc-hsub{border-left:1px solid #3a6a8a;padding-left:12px;margin-left:3px}
+.rc-hsub .t{color:#fff;font-size:12px;font-weight:700}.rc-hsub .s{color:#7aaac8;font-size:9px;margin-top:1px}
+.rc-badge{margin-left:auto;background:#2d5f8a;color:#a8d0ec;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:3px 9px;border-radius:12px}
+.rc-ig{display:grid;grid-template-columns:1fr 1fr 1fr}
+.rc-ih{background:#2d5f8a;color:#c8dff0;font-size:9px;font-weight:500;text-align:center;padding:5px;letter-spacing:.8px}
+.rc-iv{text-align:center;padding:8px 6px;font-size:11px;font-weight:600;color:#1a3a5c;border-right:1px solid #dde5f0;border-bottom:1px solid #dde5f0}
+.rc-iv:last-child{border-right:none}
+.rc-tg{display:grid;grid-template-columns:1fr 1fr 1fr}
+.rc-th{background:#3a7abf;color:#d0e8fa;font-size:9px;font-weight:500;text-align:center;padding:5px}
+.rc-tv{text-align:center;padding:8px 6px;font-size:11px;color:#2c5282;border-right:1px solid #dde5f0;border-bottom:2px solid #1a3a5c}
+.rc-tv:last-child{border-right:none}
+.rc-tn{font-size:22px;font-weight:700;color:#1a3a5c;font-family:Georgia,serif}
+.rc-dn{font-size:12px;font-weight:600;color:#3a7abf}
+.rc-sec{padding:11px 16px 9px}
+.rc-st{font-size:12px;font-weight:700;color:#1a3a5c;border-left:3px solid #3a7abf;padding-left:7px;margin-bottom:9px}
+.rc-div{height:1px;background:#dde5f0;margin:0 16px}
+.rc-ct{width:100%;border-collapse:collapse}.rc-ct tr{border-bottom:1px solid #edf2f8}
+.rc-lt{width:100%;border-collapse:collapse;font-size:10px}
+.rc-lt th{padding:5px 8px;font-weight:600;text-align:center;background:#2d7a4f;color:#c8f0da}
+.rc-lt td{padding:7px 8px;text-align:center;border-right:1px solid #dde5f0;color:#1a3a5c;font-weight:500}
+.rc-lt td:last-child{border-right:none}
+.rc-lb{display:inline-block;background:#1a3a5c;color:#fff;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px}
+.rc-nb{background:#f8fbff;border:1px solid #c8ddf0;border-radius:6px;padding:9px 12px;font-size:10px;color:#3a5a7a;line-height:1.8;white-space:pre-wrap}
+.rc-ft{background:#1a3a5c;padding:8px 16px;display:flex;justify-content:space-between;align-items:center}
+.rc-rmt{width:100%;border-collapse:collapse;font-size:9px}
+.rc-rmt th,.rc-rmt td{border:1px solid #c8d8ec;padding:4px 5px;text-align:center;vertical-align:middle}
+.rc-rmt th{background:#eaf2fb;font-weight:600;color:#1a3a5c}
+/* 분석 카드 */
+.ac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:8px}
+.ac{border:1px solid #c8d8ec;border-radius:7px;overflow:hidden}
+.ac-hd{padding:7px 10px;display:flex;align-items:center;justify-content:space-between}
+.ac-title{font-size:10px;font-weight:700;color:#fff}
+.ac-sb{font-size:9px;color:#fff;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:8px}
+.ac-bd{padding:7px 10px}
+.ac-row{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.ac-lbl{font-size:9px;color:#3a5a7a;width:56px;flex-shrink:0}
+.ac-bar{flex:1;background:#edf2f8;border-radius:20px;height:9px;overflow:hidden}
+.ac-fill{height:100%;border-radius:20px}
+.ac-pct{font-size:9px;font-weight:700;width:30px;text-align:right;flex-shrink:0}
+.wrong-tags{margin-top:4px;line-height:1.6}
+.wrong-tag{display:inline-block;background:#fed7d7;color:#c53030;padding:0 3px;border-radius:3px;margin:1px;font-size:8px}
+.ac-skills{margin-top:4px;font-size:9px;color:#5a7a9a;line-height:1.6}
+.ac-comment{font-size:9px;color:#3a5a7a;line-height:1.5;margin-top:5px;padding-top:4px;border-top:0.5px solid #edf2f8}
+.overall-box{background:#f0f6fc;border:1px solid #b5d4f0;border-radius:6px;padding:8px 12px;display:flex;gap:8px}
+.overall-icon{font-size:16px;flex-shrink:0}
+.overall-text{font-size:10px;color:#1a3a5c;line-height:1.6}
+.overall-text strong{display:block;font-size:11px;margin-bottom:2px}
+.pg-break{page-break-after:always;height:1px}
+@media print{.print-toolbar{display:none!important}.print-cards{padding:0!important;max-width:100%!important}.rc{border-radius:0!important;margin-bottom:0!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app-main">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">학생 목록 <span id="total-count"></span></div>
+      <input type="text" placeholder="이름·코드 검색..." id="search-input" oninput="filterStudents()">
+    </div>
+    <div class="student-list" id="student-list"></div>
+    <div class="sidebar-actions">
+      <div class="sel-count" id="sel-count"></div>
+      <button class="btn-bulk" id="btn-bulk" onclick="openPrint(getChecked())"><i class="ti ti-printer"></i>선택 일괄 인쇄</button>
+      <button class="btn-upload" onclick="openModal('upload-modal')"><i class="ti ti-table-import"></i>엑셀 업로드</button>
+      <button class="btn-new" onclick="newStudent()"><i class="ti ti-plus"></i>새 학생 추가</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">학생을 선택하거나 새로 추가하세요</div>
+      <span id="sync-status" style="font-size:11px;padding:2px 8px;border-radius:8px;background:#f3f4f6"></span>
+      <span class="editing-badge" id="editing-badge">수정 중</span>
+      <button class="btn-print-one" id="btn-print-one" onclick="printOne()"><i class="ti ti-printer"></i>인쇄</button>
+      <button class="btn-del" id="btn-del" onclick="deleteStudent()"><i class="ti ti-trash"></i></button>
+      <button class="btn-save" id="btn-save" onclick="saveStudent()"><i class="ti ti-device-floppy"></i>저장</button>
+    </div>
+    <div class="content" id="main-content">
+      <div class="empty"><i class="ti ti-file-text"></i><p>좌측에서 학생을 선택하거나 새 학생을 추가하세요</p></div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-wrap" id="upload-modal">
+  <div class="modal">
+    <div class="modal-title">엑셀 일괄 업로드</div>
+    <div class="modal-sub">업로드 양식 .xlsx 파일을 올려주세요.</div>
+    <div class="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="this.classList.remove('over');handleFile(event.dataTransfer.files[0]);event.preventDefault()">
+      <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+      <i class="ti ti-file-spreadsheet"></i><p>클릭하거나 파일을 드래그하세요</p>
+    </div>
+    <div class="upload-ok" id="upload-ok"></div>
+    <div class="upload-err" id="upload-err"></div>
+    <div class="modal-btns"><button onclick="closeModal('upload-modal')">닫기</button></div>
+  </div>
+</div>
+
+<div class="print-overlay" id="print-overlay">
+  <div class="print-toolbar">
+    <div class="ptoolbar-title" id="print-title">성적표 미리보기</div>
+    <button class="pbtn pbtn-close" onclick="closePrint()"><i class="ti ti-x"></i>닫기</button>
+    <button class="pbtn pbtn-go" onclick="window.print()"><i class="ti ti-printer"></i>인쇄 / PDF 저장</button>
+  </div>
+  <div class="print-cards" id="print-cards"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+"use strict";
+
+// ── 상수 ──────────────────────────────────────────────────────
+var CLASS_TIMES=['월수금 2:45~4:25 (100분)','월수금 4:25~6:05 (100분)','월수금 6:05~7:45 (100분)','화목 3:20~5:50 (150분)','화목 6:00~8:30 (150분)'];
+var TEACHERS=['한유리 (Lydia) 선생님','유선영 (Linda) 선생님','최지원 (Lindsay) 선생님','김가영 (Kaya) 선생님','윤은진 (Anne) 선생님','이예원 (Karen) 선생님','이소원 (Lauren) 선생님','홍정현 (Jessica) 선생님'];
+var PT_LEVELS=['IS','DSA','DSB','DSC','DSD','LSA','LSB','LSC','LSD'];
+var HISTORY_ITEMS=['영어를 처음 배운다.','알파벳 26개의 대소문자를 구분하여 쓸 수 있다.','Phonics를 공부한 적이 있으며, 단어의 뜻을 몰라도 발음을 할 수 있다.','1,000자 정도의 스토리북을 올바른 발음으로 읽고, 내용에 대해 답할 수 있다.','책을 읽고, 주어진 질문에 대해 문법적 오류가 없는 올바른 문장으로 말하고 쓸 수 있다.','책의 주제 및 내용을 묻는 질문에 대해 한 문단 이상으로 자신의 의견을 표현할 수 있다.','주어진 주제 및 질문에 대해 본인의 생각을 정확히 전달하고, 상대를 설득하는 말하기와 쓰기가 가능하다.'];
+
+// ── 시험지 설정 ────────────────────────────────────────────────
+var LEVEL_CFG = {
+  Phonics:{label:'CHESS PT_Phonics',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:100,qs:[...Array(40)].map(function(_,i){return i+1;}),color:'#553c9a'}]},
+  D1:{label:'CHESS PT_D1',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:48,qs:[...Array(16)].map(function(_,i){return i+1;}),color:'#553c9a'},{key:'a2',n:2,name:'Vocabulary & Expressions',max:52,qs:[...Array(17)].map(function(_,i){return i+17;}),color:'#b7791f'}]},
+  D2:{label:'CHESS PT_D2',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:15,qs:[1,2,3,4,5],color:'#553c9a'},{key:'a2',n:2,name:'Listening Comprehension',max:30,qs:[6,7,8,9,10,11,12,13,14,15],color:'#2b6cb0'},{key:'a3',n:3,name:'Reading Comprehension',max:30,qs:[16,17,18,19,20,21,22,23,24,25],color:'#276749'},{key:'a4',n:4,name:'Vocabulary',max:25,qs:[26,27,28,29,30,31,32,33],color:'#b7791f'}]},
+  D3:{label:'CHESS PT_D3',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+15;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary & Grammar',max:16,qs:[...Array(5)].map(function(_,i){return i+29;}),color:'#b7791f'}]},
+  D4:{label:'CHESS PT_D4',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+15;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:6,qs:[29,30],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:10,qs:[31,32,33],color:'#702459'}]},
+  L1:{label:'CHESS PT_L1',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
+  L2:{label:'CHESS PT_L2',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
+  L3:{label:'CHESS PT_L3',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
+  L4:{label:'CHESS PT_L4',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]}
+};
+window.LEVEL_CFG = LEVEL_CFG;
+
+var CHESS_BASE=[['IS','IS'],['DSA','DS'],['DSB','DS'],['DSC','DS'],['DSD','DS'],['LSA','LS'],['LSB','LS'],['LSC','LS'],['LSD','LS'],['MSA','MS'],['MSB','MS']];
+var ALL_SUBS=[];CHESS_BASE.forEach(function(p){ALL_SUBS.push({sub:p[0]+'1',stage:p[1]});ALL_SUBS.push({sub:p[0]+'2',stage:p[1]});});
+var SEM_MONTHS=[[12,1,2],[3,4,5],[6,7,8],[9,10,11]];
+var SEM_START=[12,3,6,9];
+var SEM_LABELS={12:'12월 학기',3:'3월 학기',6:'6월 학기',9:'9월 학기'};
+
+var students=[],currentId=null,isDirty=false;
+
+// ── 유틸 ──────────────────────────────────────────────────────
+function dateToSem(d){if(!d)return null;var dt=new Date(d),m=dt.getMonth()+1,y=dt.getFullYear();for(var i=0;i<4;i++)if(SEM_MONTHS[i].indexOf(m)>=0)return{year:y,semIdx:i};return null;}
+function addSems(b,n){var y=b.year,s=b.semIdx;s+=n;y+=Math.floor(s/4);s=((s%4)+4)%4;return{year:y,semIdx:s};}
+function monthToSem(m){if(m>=12||m<=2)return 12;if(m>=3&&m<=5)return 3;if(m>=6&&m<=8)return 6;return 9;}
+function parseStart(raw){if(!raw)return'';var s=String(raw).trim();if(s==='즉시')return'즉시';var a=s.match(/^(\d{1,2})월/);if(a)return String(monthToSem(+a[1]));var b=s.match(/^(\d{1,2})[\/\-.]/);if(b)return String(monthToSem(+b[1]));var c=s.match(/^(\d{1,2})$/);if(c&&+c[1]>=1&&+c[1]<=12)return String(monthToSem(+c[1]));return'즉시';}
+function buildStartOpts(ds,sel){sel=sel||'';if(!ds)return'';var m=new Date(ds).getMonth()+1,near=null,md=99;SEM_START.forEach(function(sm){var d=Math.abs(m-sm);if(d>6)d=12-d;if(d<=1&&d<md){md=d;near=sm;}});var ord;if(near!==null){var i=SEM_START.indexOf(near);ord=SEM_START.map(function(_,j){return SEM_START[(i+j)%4];});}else{var ci=m>=3&&m<=5?1:m>=6&&m<=8?2:m>=9&&m<=11?3:0;var ni=(ci+1)%4;ord=SEM_START.map(function(_,j){return SEM_START[(ni+j)%4];});}var sv=String(sel);return['<option value="즉시"'+(sv==='즉시'?' selected':'')+'>즉시</option>'].concat(ord.map(function(sm){return'<option value="'+sm+'"'+(sv==sm?' selected':'')+'>'+SEM_LABELS[sm]+'</option>';})).join('');}
+
+// ── Google Sheets 연동 스토리지 ───────────────────────────────
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwMkPunB2oXGVDVkpC46OQ78csCRGsy-maX4Yb-Oq05f80VCpXKGtw_DMwX8-x8HtR4/exec';
+var _isSyncing = false;
+
+function showSyncStatus(msg, color) {
+  var el = document.getElementById('sync-status');
+  if (el) { el.textContent = msg; el.style.color = color || '#6b7280'; }
+}
+
+function gasGet(url) {
+  return fetch(url + '?t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .catch(function(e){ console.error('GAS GET error', e); return {ok:false,error:e.message}; });
+}
+function gasPost(data) {
+  return fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  .then(function(r){ return r.json(); })
+  .catch(function(e){ console.error('GAS POST error', e); return {ok:false,error:e.message}; });
+}
+
+function loadStudents() {
+  showSyncStatus('⏳ 불러오는 중...', '#d97706');
+  gasGet(GAS_URL).then(function(res) {
+    if (res.ok && res.students) {
+      students = res.students;
+      students.sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+      showSyncStatus('✓ ' + students.length + '명 불러옴', '#16a34a');
+    } else {
+      showSyncStatus('⚠ 불러오기 실패', '#dc2626');
+    }
+    renderSidebar();
+  });
+}
+
+function persist(s) {
+  showSyncStatus('💾 저장 중...', '#d97706');
+  gasPost({ action: 'save', student: s }).then(function(res) {
+    if (res.ok) showSyncStatus('✓ 저장 완료', '#16a34a');
+    else showSyncStatus('⚠ 저장 실패: ' + (res.error||''), '#dc2626');
+    setTimeout(function(){ showSyncStatus('', ''); }, 3000);
+  });
+}
+
+function persistAll(list) {
+  showSyncStatus('💾 ' + list.length + '명 저장 중...', '#d97706');
+  gasPost({ action: 'saveAll', students: list }).then(function(res) {
+    if (res.ok) showSyncStatus('✓ ' + list.length + '명 저장 완료', '#16a34a');
+    else showSyncStatus('⚠ 저장 실패: ' + (res.error||''), '#dc2626');
+    setTimeout(function(){ showSyncStatus('', ''); }, 3000);
+  });
+}
+
+function gasDelete(id) {
+  return gasPost({ action: 'delete', id: id });
+}
+
+function markDirty(){isDirty=true;document.getElementById('editing-badge').style.display='';}
+
+// ── 사이드바 ──────────────────────────────────────────────────
+function renderSidebar(){
+  document.getElementById('total-count').textContent=students.length?'('+students.length+'명)':'';
+  var list=document.getElementById('student-list');
+  if(!students.length){list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--color-text-secondary);text-align:center">등록된 학생이 없어요</div>';return;}
+  list.innerHTML=students.map(function(s){return'<div class="student-item'+(s.id===currentId?' active':'')+'" data-name="'+(s.name||'').toLowerCase()+'" data-code="'+(s.memberCode||'').toLowerCase()+'"><input type="checkbox" class="student-cb" id="cb-'+s.id+'" onchange="onCbChange()" onclick="event.stopPropagation()"><div class="student-info" onclick="selectStudent(\''+s.id+'\')"><div class="student-name">'+(s.name||'이름 없음')+(s.memberCode?'<span style="font-size:9px;color:var(--color-text-secondary);margin-left:4px">'+s.memberCode+'</span>':'')+'</div><div class="student-meta">'+(s.testLevel||'—')+' · '+(s.grade?'초등'+s.grade+'학년':'학년미정')+'</div></div></div>';}).join('');
+}
+function filterStudents(){var q=document.getElementById('search-input').value.trim().toLowerCase();document.querySelectorAll('.student-item').forEach(function(el){el.style.display=(!q||el.dataset.name.indexOf(q)>=0||el.dataset.code.indexOf(q)>=0)?'':'none';});}
+function onCbChange(){var n=document.querySelectorAll('.student-cb:checked').length;document.getElementById('sel-count').style.display=n?'block':'none';document.getElementById('sel-count').textContent=n+'명 선택됨';document.getElementById('btn-bulk').style.display=n?'flex':'none';}
+function getChecked(){return students.filter(function(s){var el=document.getElementById('cb-'+s.id);return el&&el.checked;});}
+
+// ── 학생 CRUD ──────────────────────────────────────────────────
+function newStudent(){if(isDirty&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;currentId='s_'+Date.now();isDirty=false;renderForm({id:currentId});setTimeout(function(){var el=document.getElementById('f-name');if(el)el.focus();},50);}
+function selectStudent(id){if(isDirty&&currentId!==id&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;currentId=id;isDirty=false;renderForm(students.find(function(x){return x.id===id;})||{id:id});renderSidebar();}
+function saveStudent(){var s=collectForm();if(!s){showToast('학생명을 입력해 주세요.');return;}s.updatedAt=Date.now();var ex=students.find(function(x){return x.id===currentId;});if(ex)Object.assign(ex,s);else students.unshift(s);newStudents.push(s);isDirty=false;document.getElementById('editing-badge').style.display='none';document.getElementById('btn-del').style.display='flex';renderSidebar();showToast('저장됐어요!');}
+function deleteStudent(){
+  if(!currentId||!confirm('삭제할까요?'))return;
+  var delId=currentId;
+  gasDelete(delId).then(function(res){
+    if(!res.ok){ showToast('삭제 실패: '+(res.error||'')); return; }
+    students=students.filter(function(x){return x.id!==delId;});
+    currentId=null; isDirty=false; renderSidebar(); showEmpty();
+    showToast('삭제됐어요!');
+  });
+}
+
+// ── 오답 토글 (점수 초과 방지) ───────────────────────────────
+function toggleWrong(areaKey, q){
+  var btn=document.getElementById('wq-'+currentId+'-'+q);
+  if(!btn)return;
+  var isCurrentlyWrong=btn.classList.contains('wrong');
+
+  if(!isCurrentlyWrong){
+    // 추가하려는 경우 → 점수 초과 체크
+    var lv=document.getElementById('f-level')&&document.getElementById('f-level').value;
+    var cfg=LEVEL_CFG[lv];
+    var area=cfg&&cfg.areas.find(function(a){return a.key===areaKey;});
+    if(area){
+      var inputScoreEl=document.getElementById('sc-'+areaKey);
+      var inputScore=inputScoreEl?parseFloat(inputScoreEl.value):null;
+      if(inputScore!=null&&!isNaN(inputScore)){
+        // ★ 핵심 수정: 균등 배점(max/문항수) 대신 최솟값 배점 기준으로 허용 오답 수 계산
+        // Grammar처럼 마지막 문항만 4점이고 나머지 3점인 경우
+        // 13/4=3.25 소수점 계산은 오차 발생 → Math.round로 실제 배점 3점을 구함
+        var lostPts=area.max-inputScore;
+        var minPtPerQ=Math.round(area.max/area.qs.length);
+        if(minPtPerQ<1)minPtPerQ=1;
+        var maxWrongAllowed=Math.floor(lostPts/minPtPerQ);
+        var currentWrongCount=area.qs.filter(function(qn){
+          var b=document.getElementById('wq-'+currentId+'-'+qn);
+          return b&&b.classList.contains('wrong');
+        }).length;
+        if(currentWrongCount>=maxWrongAllowed){
+          showToast('입력한 점수('+inputScore+'점)로는 오답을 최대 '+maxWrongAllowed+'개까지 체크할 수 있어요.');
+          return;
+        }
+      }
+    }
+  }
+
+  btn.classList.toggle('wrong');
+  markDirty();
+}
+
+function onLevelChange(){markDirty();var lv=document.getElementById('f-level')&&document.getElementById('f-level').value;var cfg=LEVEL_CFG[lv];var sf=document.getElementById('score-fields');if(sf)sf.innerHTML=buildScoreFields(cfg,{});var wf=document.getElementById('wrong-fields');if(wf)wf.innerHTML=buildWrongFields(cfg,[]);var af=document.getElementById('avg-fields');if(af)af.innerHTML=buildAvgFields(cfg,{});var fsT=document.querySelector('#score-section .fs-title');if(fsT){var lbl=cfg?' <span style="font-size:10px;font-weight:400;color:var(--color-text-secondary);margin-left:4px">('+cfg.label+')</span>':'';fsT.innerHTML='<i class="ti ti-chart-bar"></i>영역별 점수'+lbl;}}
+function buildScoreFields(cfg,scores){scores=scores||{};if(!cfg)return'';var h='';for(var n=1;n<=4;n++){var k='a'+n,area=null;for(var i=0;i<cfg.areas.length;i++)if(cfg.areas[i].n===n){area=cfg.areas[i];break;}var val=scores[k]!==undefined?scores[k]:'';if(area)h+='<div class="fg"><label>영역'+n+' · '+area.name+'</label><input type="number" id="sc-'+k+'" min="0" max="'+area.max+'" value="'+val+'" placeholder="0~'+area.max+'" oninput="markDirty()"><div class="score-hint">배점 '+area.max+'점</div></div>';else h+='<div class="fg fg-disabled"><label>영역'+n+'</label><input type="number" disabled placeholder="해당 없음"></div>';}return h;}
+function buildWrongFields(cfg,wrongs){wrongs=wrongs||[];if(!cfg)return'<div style="font-size:12px;color:var(--color-text-secondary)">시험지 레벨을 먼저 선택해 주세요.</div>';var id=currentId||'tmp';return cfg.areas.map(function(area){var clr=area.color||'#2b6cb0';var btns=area.qs.map(function(q){var isW=wrongs.indexOf(q)>=0;return'<button class="wq-btn'+(isW?' wrong':'')+'" id="wq-'+id+'-'+q+'" onclick="toggleWrong(\''+area.key+'\','+q+')">'+q+'</button>';}).join('');return'<div style="margin-bottom:7px"><span class="area-badge" style="background:'+clr+'22;color:'+clr+';border:0.5px solid '+clr+'44">'+area.name+'</span><div class="wrong-grid">'+btns+'</div></div>';}).join('');}
+function buildAvgFields(cfg,avgs){avgs=avgs||{};if(!cfg)return'';var h='';for(var n=1;n<=4;n++){var k='a'+n,area=null;for(var i=0;i<cfg.areas.length;i++)if(cfg.areas[i].n===n){area=cfg.areas[i];break;}var av=avgs[k]!==undefined?avgs[k]:'';if(area)h+='<div class="fg"><label>영역'+n+' 평균 · '+area.name+'</label><input type="number" id="av-'+k+'" value="'+av+'" placeholder="평균 점수" oninput="markDirty()"></div>';else h+='<div class="fg fg-disabled"><label>영역'+n+' 평균</label><input type="number" disabled placeholder="—"></div>';}return h;}
+function toggleAvg(){markDirty();var show=document.getElementById('chk-avg')&&document.getElementById('chk-avg').checked;var sec=document.getElementById('avg-section');if(sec)sec.classList.toggle('visible',!!show);}
+function togglePretest(){markDirty();var show=document.getElementById('chk-pretest')&&document.getElementById('chk-pretest').checked;var body=document.getElementById('pretest-body');if(body)body.classList.toggle('visible',!!show);}
+function updatePretestBar(step){var sc=document.getElementById('pt-sc-'+step),bar=document.getElementById('pt-bar-'+step),pct=document.getElementById('pt-pct-'+step);if(!sc||!bar||!pct)return;var v=parseInt(sc.value)||0;bar.style.width=(v*10)+'%';pct.textContent=(v*10)+'%';markDirty();}
+
+function renderForm(s){
+  s=s||{};
+  var isEx=!!students.find(function(x){return x.id===s.id;});
+  document.getElementById('topbar-title').textContent=s.name||'새 학생';
+  document.getElementById('editing-badge').style.display=isDirty?'':'none';
+  document.getElementById('btn-save').style.display='flex';
+  document.getElementById('btn-print-one').style.display='flex';
+  document.getElementById('btn-del').style.display=isEx?'flex':'none';
+  var cfg=LEVEL_CFG[s.testLevel];
+  var lvOpts=['Phonics','D1','D2','D3','D4','L1','L2','L3','L4'].map(function(l){return'<option'+(s.testLevel===l?' selected':'')+'>'+l+'</option>';}).join('');
+  var grOpts=[1,2,3,4,5].map(function(g){return'<option value="'+g+'"'+(s.grade==g?' selected':'')+'>'+g+'학년</option>';}).join('');
+  var chOpts='IS1,IS2,DSA1,DSA2,DSB1,DSB2,DSC1,DSC2,DSD1,DSD2,LSA1,LSA2,LSB1,LSB2,LSC1,LSC2,LSD1,LSD2,MSA1,MSA2,MSB1,MSB2'.split(',').map(function(v){return'<option'+(s.chessLevel===v?' selected':'')+'>'+v+'</option>';}).join('');
+  var timeOpts=CLASS_TIMES.map(function(t){return'<option'+(s.classTime===t?' selected':'')+'>'+t+'</option>';}).join('');
+  var teacherOpts=TEACHERS.map(function(t){return'<option'+(s.teacher===t?' selected':'')+'>'+t+'</option>';}).join('');
+  var pt=s.pretest||{},hist=s.learningHistory!=null?s.learningHistory:null;
+  var showAvg=s.showAvg||false,wrongs=s.wrongSet||[],showPretest=s.showPretest||false;
+  var timeInList=CLASS_TIMES.indexOf(s.classTime)>=0,teacherInList=TEACHERS.indexOf(s.teacher)>=0;
+  var ptRows=[1,2,3].map(function(step){var d=pt[step]||{};var bw=(d.score!=null?d.score:0)*10;var lo='<option value="">선택</option>'+PT_LEVELS.map(function(l){return'<option'+(d.level===l?' selected':'')+'>'+l+'</option>';}).join('');var so=[...Array(11)].map(function(_,i){return'<option value="'+i+'"'+(String(d.score)===String(i)?' selected':'')+'>'+i+'/10</option>';}).join('');return'<tr><td style="font-weight:600;color:#1a3a5c;text-align:center;padding:6px 8px">'+step+'단계</td><td style="text-align:center;padding:6px 8px"><select class="pretest-sel" id="pt-lv-'+step+'" onchange="markDirty()">'+lo+'</select></td><td style="text-align:center;padding:6px 8px"><select class="pretest-sel" id="pt-sc-'+step+'" onchange="updatePretestBar('+step+')">'+so+'</select></td><td style="padding:6px 8px"><div style="display:flex;align-items:center;gap:5px"><div class="pretest-bar"><div class="pretest-bar-fill" id="pt-bar-'+step+'" style="width:'+bw+'%"></div></div><span class="pretest-pct" id="pt-pct-'+step+'">'+bw+'%</span></div></td></tr>';}).join('');
+  var histOpts='<option value="">-- 선택 --</option>'+HISTORY_ITEMS.map(function(item,i){return'<option value="'+i+'"'+(hist===i?' selected':'')+'>'+item+'</option>';}).join('');
+  var histText=hist!=null&&HISTORY_ITEMS[hist]?'<div style="margin-top:8px;font-size:11px;color:#1a4a2a;line-height:1.5;padding:7px 9px;background:rgba(255,255,255,.75);border-radius:5px;border:0.5px solid #b0d8b0">'+HISTORY_ITEMS[hist]+'</div>':'';
+  var cfgLbl=cfg?' <span style="font-size:10px;font-weight:400;color:var(--color-text-secondary);margin-left:4px">('+cfg.label+')</span>':'';
+
+  document.getElementById('main-content').innerHTML=
+    '<div class="form-section"><div class="fs-title"><i class="ti ti-user"></i>기본 정보</div><div class="form-grid">'
+    +'<div class="fg"><label>회원코드 (선택)</label><input id="f-code" value="'+(s.memberCode||'')+'" placeholder="U003244507" oninput="markDirty()"></div>'
+    +'<div class="fg"><label>학생명 *</label><input id="f-name" value="'+(s.name||'')+'" placeholder="홍길동" oninput="markDirty()"></div>'
+    +'<div class="fg"><label>학교</label><input id="f-school" value="'+(s.school||'')+'" placeholder="○○초등학교" oninput="markDirty()"></div>'
+    +'<div class="fg"><label>학년</label><select id="f-grade" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+grOpts+'</select></div>'
+    +'<div class="fg"><label>시험일</label><input type="date" id="f-date" value="'+(s.testDate||'')+'" oninput="onDateChange()"></div>'
+    +'<div class="fg"><label>수업 시작</label><select id="f-start" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+(s.testDate?buildStartOpts(s.testDate,s.startSem||''):'')+'</select></div>'
+    +'<div class="fg"><label>시험지 레벨</label><select id="f-level" onchange="onLevelChange()"><option value="">선택</option>'+lvOpts+'</select></div>'
+    +'<div class="fg"><label>CHESS 배치 레벨</label><select id="f-chess" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+chOpts+'</select></div>'
+    +'</div></div>'
+    +'<div class="form-section pretest-section"><div class="pretest-title-row fs-title" style="margin-bottom:0"><span class="pretest-title-text"><i class="ti ti-device-laptop"></i>Online Pre-Test</span><label class="toggle-wrap"><input type="checkbox" id="chk-pretest"'+(showPretest?' checked':'')+' onchange="togglePretest()"><span class="toggle-track"></span></label><span style="font-size:11px;color:#2d7a4f;font-weight:500">입력하기</span></div>'
+    +'<div class="pretest-body'+(showPretest?' visible':'')+'" id="pretest-body"><div class="pretest-layout"><div class="pretest-left"><div class="pretest-left-label">현재 영어 학습 능력</div><select id="f-history" onchange="markDirty()" style="font-size:12px;width:100%;border-color:#9ecf9e;background:#f5fbf5;border-radius:6px;padding:5px 8px">'+histOpts+'</select>'+histText+'</div>'
+    +'<div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">단계</th><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">레벨</th><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">맞은 문항</th><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">성취율</th></tr></thead><tbody>'+ptRows+'</tbody></table></div></div></div></div>'
+    +'<div class="form-section" id="score-section"><div class="fs-title"><i class="ti ti-chart-bar"></i>영역별 점수'+cfgLbl+'</div><div class="form-grid" id="score-fields">'+buildScoreFields(cfg,s.scores||{})+'</div>'
+    +'<div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding-top:8px;border-top:0.5px dashed var(--color-border-primary)"><label class="toggle-wrap"><input type="checkbox" id="chk-avg"'+(showAvg?' checked':'')+' onchange="toggleAvg()"><span class="toggle-track"></span></label><span style="font-size:12px;color:var(--color-text-secondary)">평균 비교 표시</span></div>'
+    +'<div class="avg-section'+(showAvg?' visible':'')+'" id="avg-section"><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:5px;margin-top:7px">평균 점수 입력</div><div class="form-grid" id="avg-fields">'+buildAvgFields(cfg,s.avgs||{})+'</div></div></div>'
+    +'<div class="form-section"><div class="fs-title"><i class="ti ti-x"></i>오답 문항 <span style="font-size:10px;font-weight:400;color:var(--color-text-secondary);margin-left:3px">클릭=오답 / 다시 클릭=취소 · 입력 점수 초과 시 추가 차단</span></div><div id="wrong-fields">'+buildWrongFields(cfg,wrongs)+'</div></div>'
+    +'<div class="form-section"><div class="fs-title"><i class="ti ti-building"></i>예상 반 정보</div><div class="form-grid">'
+    +'<div class="fg"><label>예상 반명</label><input id="f-class" value="'+(s.className||'')+'" placeholder="45-LB1-5A" oninput="markDirty()"></div>'
+    +'<div class="fg"><label>수업 시간</label><select id="f-time" onchange="onTimeChange()"><option value="">선택</option>'+timeOpts+'<option value="__c__"'+(!timeInList&&s.classTime?' selected':'')+'>직접 입력</option></select>'
+    +'<input id="f-time-c" placeholder="직접 입력" style="margin-top:4px;display:'+(!timeInList&&s.classTime?'block':'none')+'" value="'+(!timeInList?s.classTime||'':'')+'" oninput="markDirty()"></div>'
+    +'<div class="fg"><label>담당 선생님</label><select id="f-teacher" onchange="onTeacherChange()"><option value="">선택</option>'+teacherOpts+'<option value="__c__"'+(!teacherInList&&s.teacher?' selected':'')+'>직접 입력</option></select>'
+    +'<input id="f-teacher-c" placeholder="직접 입력" style="margin-top:4px;display:'+(!teacherInList&&s.teacher?'block':'none')+'" value="'+(!teacherInList?s.teacher||'':'')+'" oninput="markDirty()"></div>'
+    +'<div class="fg"><label>교실</label><input id="f-room" value="'+(s.room||'')+'" placeholder="4A 교실" oninput="markDirty()"></div>'
+    +'</div></div>'
+    +'<div class="form-section"><div class="fs-title"><i class="ti ti-message"></i>안내사항</div><div class="fg"><textarea id="f-notice" placeholder="Interview 코멘트 등" oninput="markDirty()">'+(s.notice||'')+'</textarea></div></div>'
+    +'<div class="form-section"><div class="fs-title"><i class="ti ti-map"></i>CHESS 과정 로드맵</div><div id="roadmap-wrap"><div style="font-size:12px;color:var(--color-text-secondary)">학년, 시험일, 수업시작, 배치 레벨을 모두 입력하면 자동 생성됩니다.</div></div><div style="font-size:10px;color:var(--color-text-secondary);margin-top:5px">위 로드맵은 학사 운영 기준에 따른 기본 학습 경로입니다. 학생의 학기말 성취도 평가(DT) 결과에 따라 개인별 학습 단계는 달라질 수 있습니다.</div></div>';
+  renderRoadmap(s);
+}
+
+function onTimeChange(){markDirty();var el=document.getElementById('f-time'),ci=document.getElementById('f-time-c');if(ci)ci.style.display=el&&el.value==='__c__'?'block':'none';}
+function onTeacherChange(){markDirty();var el=document.getElementById('f-teacher'),ci=document.getElementById('f-teacher-c');if(ci)ci.style.display=el&&el.value==='__c__'?'block':'none';}
+function onDateChange(){markDirty();var d=document.getElementById('f-date')&&document.getElementById('f-date').value;var sel=document.getElementById('f-start');if(sel)sel.innerHTML='<option value="">선택</option>'+(d?buildStartOpts(d):'');renderRoadmap();}
+
+function collectForm(){
+  var nameEl=document.getElementById('f-name'),name=nameEl?nameEl.value.trim():'';if(!name)return null;
+  var lv=document.getElementById('f-level')&&document.getElementById('f-level').value,cfg=LEVEL_CFG[lv];
+  var scores={},avgs={};
+  for(var n=1;n<=4;n++){var k='a'+n;var sv=document.getElementById('sc-'+k)&&document.getElementById('sc-'+k).value;var av=document.getElementById('av-'+k)&&document.getElementById('av-'+k).value;if(sv!==''&&sv!=null&&!isNaN(sv))scores[k]=parseFloat(sv);if(av!==''&&av!=null&&!isNaN(av))avgs[k]=parseFloat(av);}
+  var wrongSet=[];if(cfg)cfg.areas.forEach(function(area){area.qs.forEach(function(q){var btn=document.getElementById('wq-'+currentId+'-'+q);if(btn&&btn.classList.contains('wrong'))wrongSet.push(q);});});
+  var pretest={};[1,2,3].forEach(function(step){var lv2=document.getElementById('pt-lv-'+step),sc2=document.getElementById('pt-sc-'+step);pretest[step]={level:lv2?lv2.value:'',score:sc2&&sc2.value!==''?parseInt(sc2.value):null};});
+  var histEl=document.getElementById('f-history'),learningHistory=histEl&&histEl.value!==''?parseInt(histEl.value):null;
+  var showPretest=!!(document.getElementById('chk-pretest')&&document.getElementById('chk-pretest').checked);
+  var timeEl=document.getElementById('f-time'),classTime=timeEl&&timeEl.value==='__c__'?(document.getElementById('f-time-c')&&document.getElementById('f-time-c').value||''):(timeEl?timeEl.value:'');
+  var teacherEl=document.getElementById('f-teacher'),teacher=teacherEl&&teacherEl.value==='__c__'?(document.getElementById('f-teacher-c')&&document.getElementById('f-teacher-c').value||''):(teacherEl?teacherEl.value:'');
+  return{id:currentId,memberCode:document.getElementById('f-code')&&document.getElementById('f-code').value||'',name:name,school:document.getElementById('f-school')&&document.getElementById('f-school').value||'',grade:document.getElementById('f-grade')&&document.getElementById('f-grade').value||'',testDate:document.getElementById('f-date')&&document.getElementById('f-date').value||'',startSem:document.getElementById('f-start')&&document.getElementById('f-start').value||'',testLevel:lv,chessLevel:document.getElementById('f-chess')&&document.getElementById('f-chess').value||'',className:document.getElementById('f-class')&&document.getElementById('f-class').value||'',classTime:classTime,teacher:teacher,room:document.getElementById('f-room')&&document.getElementById('f-room').value||'',notice:document.getElementById('f-notice')&&document.getElementById('f-notice').value||'',showAvg:!!(document.getElementById('chk-avg')&&document.getElementById('chk-avg').checked),showPretest:showPretest,scores:scores,avgs:avgs,wrongSet:wrongSet,pretest:pretest,learningHistory:learningHistory};
+}
+
+function renderRoadmap(s){
+  var wrap=document.getElementById('roadmap-wrap');if(!wrap)return;
+  var grade=parseInt((s&&s.grade)||document.getElementById('f-grade')&&document.getElementById('f-grade').value||'');
+  var dateStr=(s&&s.testDate)||document.getElementById('f-date')&&document.getElementById('f-date').value||'';
+  var sv=(s&&s.startSem)||document.getElementById('f-start')&&document.getElementById('f-start').value||'';
+  var chess=(s&&s.chessLevel)||document.getElementById('f-chess')&&document.getElementById('f-chess').value||'';
+  if(!grade||!dateStr||!chess||!sv){wrap.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary)">학년, 시험일, 수업시작, 배치 레벨을 모두 입력하면 자동 생성됩니다.</div>';return;}
+  var startSem;if(sv==='즉시')startSem=dateToSem(dateStr);else{var sm=+sv,y=new Date(dateStr).getFullYear(),tm=new Date(dateStr).getMonth()+1,map={12:0,3:1,6:2,9:3},sy=y;if(sm<tm&&!(sm===12&&tm<=2))sy=y+1;startSem={year:sy,semIdx:map[sm]};}
+  if(!startSem)return;var si=-1;for(var i=0;i<ALL_SUBS.length;i++)if(ALL_SUBS[i].sub===chess){si=i;break;}if(si<0)return;
+  var ste=(5-grade)*4+(3-startSem.semIdx),cm={};
+  for(var i2=0;i2<=ste;i2++){var sem=addSems(startSem,i2),sub=ALL_SUBS[si+i2];if(!sub)break;cm[(grade+Math.floor((startSem.semIdx+i2)/4))+'-'+sem.semIdx]={sub:sub.sub,stage:sub.stage,isNow:i2===0,isLast:i2===ste};}
+  var as=addSems(startSem,ste+1),ag=grade+Math.floor((startSem.semIdx+ste+1)/4);cm[ag+'-'+as.semIdx]={isAce:true};
+  var html='<table class="roadmap-table"><thead><tr><th>학년</th><th>12월~2월</th><th>3월~5월</th><th>6월~8월</th><th>9월~11월</th></tr></thead><tbody>';
+  for(var g=grade;g<=Math.min(6,ag);g++){html+='<tr><th style="font-weight:500">'+(g<=5?'초등 '+g+'학년':'초등 6학년~')+'</th>';for(var si2=0;si2<=3;si2++){var c=cm[g+'-'+si2];if(!c)html+='<td class="cell-empty">—</td>';else if(c.isAce)html+='<td class="cell-ace"><span class="lv-chip lv-ACE">ACE 진급</span></td>';else html+='<td class="'+(c.isNow?'cell-now':c.isLast?'cell-grad':'')+'"><span class="lv-chip lv-'+c.stage+'">'+c.sub+'</span>'+(c.isNow?'<br><span class="badge-now">수업시작</span>':'')+(c.isLast?'<br><span class="badge-grad">졸업</span>':'')+'</td>';}html+='</tr>';}
+  wrap.innerHTML=html+'</tbody></table>';
+}
+
+// ── 분석 엔진 ──────────────────────────────────────────────────
+"use strict";
+// ════════════════════════════════════════════════════════════════
+// CHESS 입학시험 분석 엔진 v2 — 전체 8레벨 (D1~D4, L1~L4)
+// 학부모 친화적 언어로 자동 변환
+// ════════════════════════════════════════════════════════════════
+
+// 문항별 분석 데이터
+// skill: 실제 평가 능력
+// weak: 부족한 능력 (내부 진단용)
+// msg: 학부모 친화적 설명 (성적표 출력용)
+var Q_DETAIL = {
+
+// ── D1 (DSA) ─────────────────────────────────────────────────
+D1: {
+  1:{skill:"초성 이중자음 bl 식별",weak:"연속자음 blend 인식 약함",msg:"영어 소리의 첫 자음을 두 개 이어서 읽는 연습이 필요해요 (bl, br, fl 등)"},
+  2:{skill:"초성 이중자음 fr 식별",weak:"f계열 blend 인식 약함",msg:"'frog'처럼 f+r이 합쳐지는 소리를 정확하게 구분하는 훈련이 도움이 됩니다"},
+  3:{skill:"초성 이중자음 sm 식별",weak:"s계열 blend 인식 약함",msg:"'smart'의 sm처럼 s+자음이 이어지는 소리 패턴을 익히면 좋아요"},
+  4:{skill:"초성 이중자음 cl 식별",weak:"c+l/r blend 인식 약함",msg:"'close'의 cl처럼 자음이 이어지는 소리를 한 덩어리로 듣는 연습이 필요해요"},
+  5:{skill:"단모음 o 음가 인식",weak:"CVC 중간 모음 구분 약함",msg:"'top', 'hop' 같은 짧은 모음 o 소리를 정확하게 듣고 쓰는 연습이 부족해요"},
+  6:{skill:"단모음 u 음가 인식",weak:"short vowel u 약함",msg:"'sun', 'cup' 같은 단모음 u 발음을 확실하게 구분하는 것이 기초 읽기에 중요해요"},
+  7:{skill:"Magic E 장모음 a_e 인식",weak:"Magic E 규칙 미숙",msg:"'tape', 'cake'처럼 끝에 e가 붙으면 앞 모음이 길어지는 규칙을 아직 잘 모르고 있어요"},
+  8:{skill:"이중문자 oo/ea 음가",weak:"vowel team 소리-단어 연결 약함",msg:"'cook'의 oo, 'meat'의 ea처럼 두 모음이 합쳐지는 소리를 그림·단어와 연결해 익혀야 해요"},
+  9:{skill:"r-controlled vowel ar 인식",weak:"ar/ir/ur 음가 구분 약함",msg:"'shark'처럼 r 앞에 오는 모음 소리(ar)를 정확하게 인식하는 연습이 필요해요"},
+  10:{skill:"이중문자 oi 음가 및 어휘 의미",weak:"oi 음가와 어휘 의미 연결 약함",msg:"'boil'의 oi 소리를 알면서도 그 단어의 뜻까지 연결하는 것이 아직 익숙하지 않아요"},
+  11:{skill:"Magic E 장모음 i_e 인식",weak:"Magic E i_e 약함",msg:"'bike'처럼 i + 자음 + e 패턴을 읽고 뜻까지 이어가는 연습이 필요해요"},
+  12:{skill:"-ing 소리 및 품사 구분",weak:"-ing 음가와 기초 문장 구조 약함",msg:"'sing'과 'singing'처럼 -ing 패턴을 소리로 구분하고 문장에서 쓸 수 있어야 해요"},
+  13:{skill:"이중문자 ai 소리-그림 연결",weak:"vowel team ai 그림 매칭 약함",msg:"'train', 'rain'의 ai 소리를 듣고 그림과 연결하는 능력을 더 키울 필요가 있어요"},
+  14:{skill:"이중문자 ou 소리-어휘 연결",weak:"vowel team ou 약함",msg:"'house', 'mouse'의 ou 소리를 알고 단어와 연결하는 훈련이 더 필요해요"},
+  15:{skill:"rime chunk -ink 인식",weak:"청크 단위 읽기 약함",msg:"'pink', 'sink'처럼 단어 끝 소리 묶음(-ink)을 통째로 익히면 읽기가 빨라져요"},
+  16:{skill:"단모음 o 소리-그림 매칭",weak:"short o 그림 연결 약함",msg:"'box', 'fox'처럼 short o 소리가 나는 단어를 그림으로 바로 연결하는 연습이 필요해요"},
+  17:{skill:"음식 어휘 청취 이해",weak:"food 어휘와 질문-응답 구조 약함",msg:"'My favorite food is salad'처럼 좋아하는 것을 묻고 답하는 표현이 아직 익숙하지 않아요"},
+  18:{skill:"방 이름과 행동 연결",weak:"방 이름-기능 매핑 약함",msg:"'화장실 = wash hands'처럼 집의 각 공간과 거기서 하는 행동을 연결해서 익혀야 해요"},
+  19:{skill:"방 이름과 위치 이해",weak:"living room 위치-기능 약함",msg:"'거실 = watch TV'처럼 공간별 활동을 그림으로 연결하는 연습이 필요해요"},
+  20:{skill:"날씨 어휘 시각 이해",weak:"날씨 형용사 그림 인식 약함",msg:"비 오는 장면을 보고 'rainy'라고 말하는 것처럼 날씨 표현을 그림으로 익히는 연습이 더 필요해요"},
+  21:{skill:"날씨 어휘 시각 이해",weak:"windy 시각 단서 인식 약함",msg:"'windy'처럼 바람 부는 장면을 보고 날씨 단어를 말하는 연습이 부족해요"},
+  22:{skill:"신체 부위와 감각 동사 연결",weak:"body part-function 매핑 약함",msg:"'코로 냄새 맡는다(smell with nose)'처럼 신체 부위와 동작을 연결하는 표현을 익혀야 해요"},
+  23:{skill:"신체 부위와 감각 동사 연결",weak:"eyes-see 연결 약함",msg:"'눈으로 본다(see with eyes)'처럼 신체-동작 연결 표현을 반복해서 익히면 좋아요"},
+  24:{skill:"도형 어휘 인식",weak:"diamond 도형 시각 인식 약함",msg:"연 모양을 'diamond'라고 부를 수 있도록 도형 이름을 사물과 연결해 배우는 것이 필요해요"},
+  25:{skill:"도형 어휘 인식",weak:"triangle 도형 인식 약함",msg:"산 모양이 세모(triangle)라는 것처럼 도형을 사물에서 찾는 연습이 도움이 됩니다"},
+  26:{skill:"정각 시간 읽기",weak:"시침/분침 역할 혼동",msg:"시계에서 시침과 분침을 구분하고 '4시(four o'clock)'처럼 정각을 읽는 연습이 필요해요"},
+  27:{skill:"비정각 시간 읽기",weak:"5분 단위 시간 읽기 약함",msg:"'8시 10분(eight ten)'처럼 분침을 5분 단위로 읽는 것이 아직 어려울 수 있어요"},
+  28:{skill:"장소와 행동 동사 연결",weak:"kitchen-cook 장소-동사 연결 약함",msg:"'부엌에서는 요리한다(cook in the kitchen)'처럼 장소와 행동을 묶어 배우는 것이 효과적이에요"},
+  29:{skill:"장소와 행동 동사 연결",weak:"bedroom-sleep 연결 약함",msg:"'침실에서는 잔다(sleep in the bedroom)'처럼 공간별 행동 표현을 익혀보세요"},
+  30:{skill:"계절 어휘 인식",weak:"winter 시각 단서 인식 약함",msg:"눈사람 그림을 보고 'winter'라고 말할 수 있도록 계절별 대표 단서를 그림으로 익히면 좋아요"},
+  31:{skill:"계절 장면 속 명사 이해",weak:"snowman 어휘 약함",msg:"겨울 장면에서 'snowman'이 무엇인지 그림으로 바로 알아보는 연습이 필요해요"},
+  32:{skill:"전치사 in 공간 관계 이해",weak:"위치 전치사 in 약함",msg:"'상자 안에(in the box)'처럼 전치사로 위치를 표현하는 것이 아직 익숙하지 않아요"},
+  33:{skill:"전치사구 in front of 이해",weak:"in front of 공간 이해 약함",msg:"'상자 앞에(in front of the box)'처럼 앞/뒤 방향 전치사 표현을 실물로 직접 연습하면 도움이 됩니다"}
+},
+
+// ── D2 (DSB) ─────────────────────────────────────────────────
+D2: {
+  1:{skill:"Magic E i_e 음가",weak:"magic e 규칙 약함",msg:"'kite'처럼 모음+자음+e 패턴에서 긴 모음이 나오는 규칙을 익히면 읽기가 훨씬 수월해져요"},
+  2:{skill:"단모음 o 음가 식별",weak:"short o 그림 연결 약함",msg:"'fox'와 'box'처럼 o 소리가 같은 단어를 그림으로 연결하는 연습이 필요해요"},
+  3:{skill:"이중모음 oi 음가 식별",weak:"oi/oy 소리 구분 약함",msg:"'coin'과 'soil'처럼 oi 소리가 나는 단어를 한 묶음으로 익히면 발음이 안정돼요"},
+  4:{skill:"CVC 문장 단위 청취",weak:"유사 단어 음가 변별 약함",msg:"'cat'과 'cap'처럼 비슷한 소리를 문장 속에서 정확히 구분하는 청취 훈련이 필요해요"},
+  5:{skill:"장모음 e 계열 문장 청취",weak:"long e 단어 문장 내 청취 약함",msg:"'peach', 'seat'처럼 ee/ea 소리를 문장에서 정확하게 듣는 연습이 더 필요해요"},
+  6:{skill:"Does 질문 응답 구조",weak:"Do/Does 응답 형태 오류",msg:"'Does she like...? → Yes, she does'처럼 does로 묻고 답하는 표현을 자동으로 쓸 수 있도록 반복 연습이 필요해요"},
+  7:{skill:"Can you 부정 응답",weak:"you→I 관점 전환 약함",msg:"'Can you...? → No, I can't'처럼 질문의 주어를 I로 바꿔 대답하는 것이 아직 익숙하지 않아요"},
+  8:{skill:"대화 주제 유지 청취",weak:"앞 질문 주제 유지 약함",msg:"대화에서 계속 이어지는 주제(예: 계절)를 놓치지 않고 따라가는 연습이 도움이 됩니다"},
+  9:{skill:"collocation 청취",weak:"ice skating 청크 처리 약함",msg:"'ice skating'처럼 두 단어가 항상 함께 쓰이는 표현을 통째로 익히면 듣기가 쉬워져요"},
+  10:{skill:"이야기 핵심 사건 파악",weak:"인물-문제-물건 관계 약함",msg:"짧은 이야기에서 누가, 무엇을 잃었는지 같은 핵심 정보를 메모하며 듣는 연습이 필요해요"},
+  11:{skill:"인물 발화 내용 파악",weak:"발화와 행동 혼동",msg:"이야기 속 인물이 한 말의 내용을 정확하게 듣고 이해하는 연습이 더 필요해요"},
+  12:{skill:"쇼핑 대화 구매 목적 파악",weak:"핵심 구매 품목 청취 약함",msg:"'I want to buy a T-shirt'처럼 쇼핑 대화에서 무엇을 사려는지 파악하는 훈련이 필요해요"},
+  13:{skill:"가격 정보 구분 청취",weak:"현재/이전 가격 혼동",msg:"'지금 가격(twenty dollars)'과 '예전 가격(thirty dollars)'을 구분해서 듣는 연습이 도움이 돼요"},
+  14:{skill:"이야기 첫 사건 파악",weak:"서사 초기 정보 청취 약함",msg:"이야기 첫 부분에서 등장하는 중요한 물건이나 사람을 정확히 듣는 연습이 필요해요"},
+  15:{skill:"이야기 행동 파악",weak:"동사구 단위 청취 약함",msg:"'pull up처럼 두 단어가 합쳐진 동작 표현을 이야기에서 정확하게 듣는 연습이 도움이 됩니다"},
+  16:{skill:"목적지 직접 정보 파악",weak:"장소 vs 이동수단 혼동",msg:"'Where?'라고 물으면 장소만 찾으면 돼요. 'going to the movie theater'처럼 장소 표현에 집중하는 연습이 필요해요"},
+  17:{skill:"비교급 이유 파악",weak:"이유 근거 문장 연결 약함",msg:"'왜 지하철을 타야 하는지(quicker than the bus)'처럼 이유를 비교 표현과 함께 찾는 연습이 필요해요"},
+  18:{skill:"거주 장소 직접 정보 파악",weak:"live in 뒤 장소 이해 약함",msg:"'They live in a little house'처럼 어디서 사는지 파악하는 읽기가 아직 익숙하지 않아요"},
+  19:{skill:"반복 형용사 대상 파악",weak:"형용사-명사 연결 약함",msg:"'empty fridge, empty cupboards'처럼 같은 형용사가 어떤 것들을 설명하는지 찾는 연습이 필요해요"},
+  20:{skill:"활동 파악",weak:"활동 동사 구별 약함",msg:"'go fishing(낚시하러 가다)'처럼 go+동사ing 형태의 활동 표현을 익히면 도움이 됩니다"},
+  21:{skill:"수량 정보 파악",weak:"숫자와 대상 연결 약함",msg:"'four fish(물고기 4마리)'처럼 얼마나 많은지를 정확히 읽는 연습이 더 필요해요"},
+  22:{skill:"대화 속 이유 파악",weak:"can/can't 이유 연결 약함",msg:"'I can't because I have a piano lesson'처럼 할 수 없는 이유를 대화에서 찾는 연습이 필요해요"},
+  23:{skill:"화자별 능력 구분",weak:"두 화자 정보 혼동",msg:"대화에서 A가 할 수 있는 것과 B가 할 수 있는 것을 구분해서 이해하는 연습이 도움이 돼요"},
+  24:{skill:"서사 행동 파악",weak:"도구와 행동 대상 혼동",msg:"'도끼(axe)로 나무(tree)를 찍었다'처럼 무엇으로 무엇을 했는지 정확히 읽는 연습이 필요해요"},
+  25:{skill:"인물 행동 파악",weak:"주어-동사 연결 약함",msg:"이야기에서 누가 어떤 행동을 했는지 인물과 동작을 연결하는 연습이 더 필요해요"},
+  26:{skill:"그림-운동 어휘 연결",weak:"도구로 종목 추론 약함",msg:"라켓을 보면 'tennis'라는 운동이 떠올라야 해요. 운동 도구와 종목 이름을 함께 익히면 좋아요"},
+  27:{skill:"그림-직업 어휘 연결",weak:"직업 어휘 범주 약함",msg:"빵 굽는 사람이 'baker'라는 것처럼 직업과 관련 장소·도구를 함께 배우면 더 잘 기억돼요"},
+  28:{skill:"범주 분류 능력",weak:"직업 vs 다른 범주 구분 약함",msg:"'violin'은 악기지 직업이 아니라는 것처럼 단어를 종류별로 분류하는 연습이 필요해요"},
+  29:{skill:"불규칙 과거형",weak:"eat-ate 불규칙 과거형 모름",msg:"'eat → ate'처럼 규칙이 없는 동사의 과거형을 따로 외워야 해요. 자주 쓰는 불규칙 동사부터 익히면 좋아요"},
+  30:{skill:"규칙 과거형",weak:"cook-cooked 규칙 약함",msg:"'cook → cooked'처럼 동사에 -ed를 붙이는 과거형 만들기를 연습하면 도움이 됩니다"},
+  31:{skill:"반의어 문맥 적용",weak:"No 응답 뒤 반대 의미 적용 약함",msg:"'expensive(비싸다)'의 반대가 'cheap(싸다)'인 것처럼 반대말을 대화 상황에서 쓰는 연습이 필요해요"},
+  32:{skill:"문맥 동사 선택",weak:"상황 단서 기반 동사 선택 약함",msg:"'목이 마르다(thirsty)' → '물을 마신다(drinking)'처럼 상황에 맞는 동사를 고르는 연습이 도움이 됩니다"},
+  33:{skill:"수량 표현 a few",weak:"a few 구조와 가산명사 연결 약함",msg:"'a few oranges(오렌지 몇 개)'처럼 셀 수 있는 명사 앞에 a few를 쓰는 규칙을 익히면 좋아요"}
+},
+
+// ── D3 (DSC) ─────────────────────────────────────────────────
+D3: {
+  1:{skill:"전화 대화 요청 대상 파악",weak:"화자-청자 관계 파악 약함",msg:"전화 대화에서 누가 누구에게 연락하려 하는지 파악하는 연습이 필요해요"},
+  2:{skill:"전화 메시지 내용 파악",weak:"부정 정보 세부 청취 약함",msg:"'can't go to soccer practice(축구 연습을 못 간다)'처럼 전화 메시지의 핵심 내용을 정확하게 듣는 연습이 도움이 됩니다"},
+  3:{skill:"이야기 이동 장소 파악",weak:"동사+장소 청취 약함",msg:"이야기 속 인물이 어디로 이동했는지(ran to the barn)를 듣고 파악하는 연습이 필요해요"},
+  4:{skill:"이야기 상태 변화 파악",weak:"상태 변화 어휘 turned 청취 약함",msg:"'하늘이 까맣게 변했다(sky turned black)'처럼 변화를 나타내는 표현을 주의 깊게 듣는 연습이 필요해요"},
+  5:{skill:"미래 계획 목적지 파악",weak:"여러 지명 중 목적지 구분 약함",msg:"'어디로 갈 계획인지' 묻는 대화에서 목적지를 정확하게 찾는 연습이 더 필요해요"},
+  6:{skill:"대화 이유 파악",weak:"두 화자 정보 혼동",msg:"대화에서 '왜 거기 가는지' 이유를 찾을 때 누가 한 말인지 구분하며 듣는 연습이 필요해요"},
+  7:{skill:"이야기 핵심 소재 파악",weak:"핵심 소재와 문제 요소 혼동",msg:"이야기에서 아이들이 기다리는 것이 무엇인지 핵심 대상을 정확히 파악하는 연습이 도움이 됩니다"},
+  8:{skill:"감정 변화 파악",weak:"처음과 끝 감정 변화 미반영",msg:"이야기 처음의 설레는 감정이 마지막에 어떻게 바뀌었는지 따라가는 연습이 필요해요"},
+  9:{skill:"과거 경험 장소 파악",weak:"유사 장소 혼동",msg:"지난 주말에 어디 갔는지 묻는 대화에서 장소 정보를 정확하게 파악하는 연습이 도움이 됩니다"},
+  10:{skill:"과거 사건 결과 파악",weak:"활동과 사고 결과 혼동",msg:"'발목을 다쳤다(hurt his ankle)'처럼 어떤 일이 일어났는지 결과를 정확하게 듣는 연습이 필요해요"},
+  11:{skill:"이야기 행동 경로 파악",weak:"전치사구 청취 약함",msg:"'열린 창문을 통해 들어왔다(jumped through the open window)'처럼 어떻게 들어왔는지 파악하는 연습이 필요해요"},
+  12:{skill:"감정 이유 파악",weak:"감정 변화와 이유 연결 약함",msg:"이야기에서 인물이 왜 행복해졌는지 그 이유를 찾는 연습이 도움이 됩니다"},
+  13:{skill:"대화 전체 평가 파악",weak:"How was ~ 응답 청취 약함",msg:"'주말이 어땠어요?'라는 질문에 대한 답을 정확하게 듣는 연습이 필요해요"},
+  14:{skill:"화자별 활동 구분",weak:"두 화자 활동 정보 혼동",msg:"대화에서 A가 한 일과 B가 한 일을 따로따로 정리하며 듣는 연습이 도움이 됩니다"},
+  15:{skill:"인물 묘사 직접 파악",weak:"not 처리 부족",msg:"'잘생기지 않았다(not very handsome)'처럼 부정 표현이 포함된 묘사를 정확히 이해하는 연습이 필요해요"},
+  16:{skill:"반복 행동 파악",weak:"never 빈도부사 이해 약함",msg:"'한 번도 웃지 않았다(never smiled)'처럼 never가 표현하는 의미를 정확하게 이해하는 연습이 필요해요"},
+  17:{skill:"이유 파악",weak:"원인 문장 찾기 약함",msg:"이야기에서 왜 그런 일이 생겼는지(No one likes my restaurant!) 이유를 찾는 연습이 도움이 됩니다"},
+  18:{skill:"행동·태도 파악",weak:"말 내용과 태도 혼동",msg:"인물이 뭐라고 말했는지와 실제로 어떤 태도를 보였는지를 구분해서 읽는 연습이 필요해요"},
+  19:{skill:"직업 정보 파악",weak:"배경 정보와 직업 혼동",msg:"'Daniel의 직업은 dresser(드레서)였다'처럼 인물의 역할을 설명하는 문장을 정확히 찾는 연습이 필요해요"},
+  20:{skill:"세부 정보 파악",weak:"핵심 정보와 주변 정보 혼동",msg:"황제가 모든 돈을 무엇에 썼는지처럼 중요한 세부 정보를 정확히 찾는 연습이 도움이 됩니다"},
+  21:{skill:"이유 파악",weak:"발화자별 이유 혼동",msg:"'내가 반지를 줄 수 없는 이유'처럼 누가 무슨 이유를 말했는지 구분하며 읽는 연습이 필요해요"},
+  22:{skill:"요청 목적 파악",weak:"목적과 갈등 상황 혼동",msg:"이야기에서 Liam이 원래 무엇을 부탁하려 했는지 목적을 찾는 연습이 도움이 됩니다"},
+  23:{skill:"과거 경험 이유 파악",weak:"일반적 이유에 의존",msg:"지난 여름 해변이 즐겁지 않았던 이유(too crowded)를 대화에서 찾는 연습이 필요해요"},
+  24:{skill:"미래 계획 세부 정보",weak:"대화 속 교통수단 정보 처리 약함",msg:"'기차로 갈 거야(take the train)'처럼 대화에서 교통수단 정보를 정확히 찾는 연습이 필요해요"},
+  25:{skill:"현재완료 경험 표현 파악",weak:"장소 경험과 탑승 경험 혼동",msg:"'Have you been on an airplane?'처럼 경험을 묻는 현재완료 표현을 이해하는 연습이 도움이 됩니다"},
+  26:{skill:"일반 정보 파악",weak:"예시와 핵심 정보 혼동",msg:"'호주는 자연으로 유명하다'처럼 핵심 정보와 구체적인 예시를 구분하는 연습이 필요해요"},
+  27:{skill:"원인 파악",weak:"주변 정보에 주의 분산",msg:"Ricky가 길을 잃은 이유(귀여운 다람쥐를 따라갔기 때문)를 이야기에서 찾는 연습이 필요해요"},
+  28:{skill:"지시어 대상 파악",weak:"there가 가리키는 대상 추적 약함",msg:"'그곳에 가고 싶어(I want to go there)'에서 '그곳'이 무엇인지 찾는 연습이 도움이 됩니다"},
+  29:{skill:"기능 어휘 연어",weak:"leave a message 콜로케이션 모름",msg:"'메시지를 남기다(leave a message)'처럼 전화할 때 쓰는 표현을 통째로 익히면 실생활에서 바로 쓸 수 있어요"},
+  30:{skill:"동사 과거형 선택",weak:"throw-threw 불규칙 과거형 약함",msg:"'던지다(throw → threw)'처럼 공을 던지는 것과 관련된 불규칙 과거형을 익히는 연습이 필요해요"},
+  31:{skill:"이동 동사 선택",weak:"march 문맥 적용 약함",msg:"'줄지어 행진하다(march through the town)'처럼 이야기에 맞는 동작 단어를 문장에서 고르는 연습이 필요해요"},
+  32:{skill:"There is/are 수일치",weak:"복수 명사 앞 There are 오류",msg:"'토마토가 여러 개 있다 → There are tomatoes'처럼 복수 명사 앞에 are를 쓰는 규칙을 익히면 좋아요"},
+  33:{skill:"be동사 과거 주어-동사 일치",weak:"I was / you were 혼동",msg:"'나는 피곤했다 → I was tired'처럼 I 다음에는 was를 쓰는 규칙을 확실하게 익혀야 해요. 4점 문항이에요"}
+},
+
+// ── D4 (DSD) ─────────────────────────────────────────────────
+D4: {
+  1:{skill:"이야기 속 인물 반응 파악",weak:"주어 전환 후 행동 혼동",msg:"이야기에서 누가 어떤 반응을 보였는지(사람들이 환호했다) 주인공과 주변 인물의 행동을 구분하며 듣는 연습이 필요해요"},
+  2:{skill:"이야기 핵심 사건 파악",weak:"결말 인물 역할 확인 약함",msg:"이야기 결말에서 누가 상황을 해결했는지 핵심 인물을 파악하는 연습이 도움이 됩니다"},
+  3:{skill:"인물 특이한 욕구 파악",weak:"want + 목적어 + to V 구조 청취 약함",msg:"'~하기를 원했다'처럼 인물의 특별한 바람이나 욕구를 듣고 이해하는 연습이 필요해요"},
+  4:{skill:"도구 정보 파악",weak:"도구와 행동 대상 혼동",msg:"'앵무새 깃털로 간지럽혔다(with parrot feather)'처럼 무엇으로 했는지 도구 정보를 정확하게 듣는 연습이 필요해요"},
+  5:{skill:"NOT 문항 처리",weak:"부정 조건 처리 약함",msg:"'사실이 아닌 것을 고르세요(NOT true)' 같은 문제에서 먼저 들린 정보들을 하나씩 확인하고 남은 것을 고르는 연습이 필요해요"},
+  6:{skill:"수식어 포함 표현 청취",weak:"핵심 명사+수식어 덩어리 처리 약함",msg:"'모자를 쓴 사람(someone wearing a hat)'처럼 명사와 설명이 함께 붙은 표현을 덩어리로 듣는 연습이 도움이 됩니다"},
+  7:{skill:"대화 주제 파악",weak:"배경어와 화제 혼동",msg:"대화에서 무엇에 대해 이야기하는지 중심 화제를 파악하는 연습이 필요해요"},
+  8:{skill:"반복 행동으로 성격 파악",weak:"인물 성격-행동 연결 약함",msg:"'하루 종일 먹는다(eats all day)'처럼 행동을 통해 인물의 성격을 파악하는 연습이 도움이 됩니다"},
+  9:{skill:"가장 행동과 실제 행동 구분",weak:"pretend 의미 처리 약함",msg:"'자는 척한다(pretends he is sleeping)'처럼 실제 행동과 가장하는 행동을 구분해서 듣는 연습이 필요해요"},
+  10:{skill:"이동 장소/동선 파악",weak:"go over to 등 이동 표현 청취 약함",msg:"이야기에서 인물이 어디로 이동했는지(walked over to his desk) 동선을 따라가며 듣는 연습이 필요해요"},
+  11:{skill:"흥분 원인 파악",weak:"감정 원인 연결어 없이 파악 약함",msg:"'왜 흥분했는지' 직접적인 이유 표현이 없어도 상황에서 원인을 찾는 연습이 도움이 됩니다"},
+  12:{skill:"사건 정보 파악",weak:"수식 분사구 연결 약함",msg:"'숲에서 들려오는 큰 소리(loud noise coming from the forest)'처럼 무엇이 어디서 들려왔는지 파악하는 연습이 필요해요"},
+  13:{skill:"감정 원인 파악",weak:"미래 기대와 현재 이동 혼동",msg:"이야기에서 인물이 왜 기쁜지 그 원인을 감정 표현과 연결해 찾는 연습이 필요해요"},
+  14:{skill:"감각 정보 구분",weak:"hear/see 정보 혼동",msg:"'보는 것'과 '듣는 것'을 구분해서 이야기 속 세부 정보를 파악하는 연습이 도움이 됩니다"},
+  15:{skill:"인물 대비 독해",weak:"두 인물 정보 혼동",msg:"'Mr. Mistako'와 'Captain Perfecto'처럼 두 인물이 대비될 때 각자의 특징을 따로 정리하며 읽는 연습이 필요해요"},
+  16:{skill:"NOT 문항 처리",weak:"인물별 특징 구분 약함",msg:"어떤 설명이 어떤 인물의 것인지 구분하면서 'NOT true'인 보기를 찾는 연습이 도움이 됩니다"},
+  17:{skill:"감정 원인 독해",weak:"감정 상태와 원인 연결 약함",msg:"인물이 속상한 이유(치즈가 보이지 않는 것)를 이야기에서 찾는 연습이 필요해요"},
+  18:{skill:"사건 결과 독해",weak:"결과 문장의 대상 파악 약함",msg:"어떤 행동이 어떤 결과를 가져왔는지(달을 덮었다)를 정확하게 읽는 연습이 도움이 됩니다"},
+  19:{skill:"인물 심리 직접 파악",weak:"배경 정보와 핵심 심리 혼동",msg:"인물이 무엇을 두려워하는지(어둠)처럼 심리를 직접 설명하는 문장을 찾는 연습이 필요해요"},
+  20:{skill:"감각 정보 독해",weak:"감각 정보 유형 구분 약함",msg:"인물이 '들은 것'이 무엇인지 감각별로 구분해서 읽는 연습이 도움이 됩니다"},
+  21:{skill:"인물 태도 파악",weak:"인물 의견과 희망 사항 혼동",msg:"'박물관이 지루하다(boring)'는 인물들의 생각을 행동이나 말에서 찾는 연습이 필요해요"},
+  22:{skill:"선호 정보 독해",weak:"나열 정보 끝까지 읽기 약함",msg:"대화에서 가고 싶은 장소(water park)처럼 선호 정보를 끝까지 읽어 정확히 찾는 연습이 도움이 됩니다"},
+  23:{skill:"원인 독해",weak:"상황 설정 이해 약함",msg:"인물이 왜 부르지 않았는지(손이 보이지 않았기 때문) 이유를 상황에서 찾는 연습이 필요해요"},
+  24:{skill:"감정 어휘 이해",weak:"crabby, ignored 등 감정 어휘 약함",msg:"'무시당한 기분(ignored)'이나 '짜증난(crabby)'처럼 감정을 나타내는 어휘를 상황과 함께 익히는 연습이 필요해요"},
+  25:{skill:"명시 정보 독해",weak:"전치사구 중심 정보 추출 약함",msg:"'London에 관한 책(a book about London)'처럼 about 뒤의 주제를 파악하는 연습이 도움이 됩니다"},
+  26:{skill:"동기 독해",weak:"so that 구문 이해 약함",msg:"'런던 사람처럼 보이기 위해 모자를 원했다'처럼 행동의 목적을 나타내는 표현을 찾는 연습이 필요해요"},
+  27:{skill:"인물 정보 분리 독해",weak:"두 인물 정보 혼동",msg:"Tim과 William의 정보를 혼동하지 않도록 인물별로 내용을 따로 정리하며 읽는 연습이 필요해요"},
+  28:{skill:"문맥 어휘와 태도 파악",weak:"grumble 등 태도 동사 이해 약함",msg:"'투덜거리다(grumbling)'처럼 인물의 태도를 나타내는 단어를 문맥에서 이해하는 연습이 도움이 됩니다"},
+  29:{skill:"문맥 유의어 선택",weak:"calm-peaceful 의미장 구분 약함",msg:"'차분한(calm)'이 '평화로운(peaceful)'과 비슷하다는 것처럼 비슷한 뜻의 단어를 문장에서 구분하는 연습이 필요해요"},
+  30:{skill:"영어 정의 기반 어휘 선택",weak:"영어 정의 읽고 어휘 추론 약함",msg:"영어로 된 단어 설명을 읽고 알맞은 단어(jealous)를 고르는 연습이 도움이 됩니다"},
+  31:{skill:"대명사 선택",weak:"복수 선행사-대명사 연결 약함",msg:"'the kids → they'처럼 앞에 나온 명사에 맞는 대명사를 고르는 연습이 필요해요"},
+  32:{skill:"be동사 과거 수일치",weak:"복수 주어 were 적용 약함",msg:"'상어들은 ~했다 → sharks were ~'처럼 복수 주어 뒤에 were를 쓰는 규칙을 익히는 연습이 필요해요"},
+  33:{skill:"문장 배열/어순",weak:"SVO 구조와 시간부사 위치 약함",msg:"주어, 동사, 목적어, 시간부사를 순서에 맞게 배열하는 연습이 필요해요. 4점 문항이에요"}
+},
+
+// ── L1 (LSA) ─────────────────────────────────────────────────
+L1: {
+  1:{skill:"인물 관계 파악",weak:"고유명사·관계어 연결 약함",msg:"'이웃(neighbor)'이 누구인지처럼 이야기에서 인물 사이의 관계를 파악하는 연습이 필요해요"},
+  2:{skill:"반복 행동 파악",weak:"always+동작동사 청취 약함",msg:"'항상 소리 지른다(always yelling)'처럼 인물의 습관적인 행동을 정확하게 듣는 연습이 필요해요"},
+  3:{skill:"성격·태도 파악",weak:"주어별 행동 혼동",msg:"이야기에서 인물이 어른에게 어떤 태도를 보이는지(polite) 파악하는 연습이 도움이 됩니다"},
+  4:{skill:"목적지 파악",weak:"여러 지명 중 질문 초점 혼동",msg:"'Where?'라는 질문에 맞는 장소 정보(Rocky Mountains)를 정확하게 찾는 연습이 필요해요"},
+  5:{skill:"여행 목적 파악",weak:"핵심 목적어 청취 약함",msg:"'무엇을 보러 가는지(going to see the Icefield)' 여행 목적을 정확하게 듣는 연습이 필요해요"},
+  6:{skill:"비유적 묘사 이해",weak:"비유 표현 실제 대상 혼동",msg:"'강처럼 흘러내린다(like a river)'는 비유에서 실제로 무엇이 흐르는지 파악하는 연습이 도움이 됩니다"},
+  7:{skill:"해야 할 일 파악",weak:"had to 뒤 동사구 청취 약함",msg:"'소원을 빌어야 했다(had to make a wish)'처럼 해야 했던 일을 표현하는 문장을 듣는 연습이 필요해요"},
+  8:{skill:"생각 내용 파악",weak:"범위 표현 ever/all 청취 약함",msg:"인물이 무슨 생각을 했는지(all of the wishes she had ever made) 생각의 내용을 정확하게 듣는 연습이 도움이 됩니다"},
+  9:{skill:"장소 추론",weak:"현재 장면과 회상 내용 혼동",msg:"동전, 물, 우물(well) 같은 단서를 종합해서 장면의 장소를 추측하는 연습이 필요해요"},
+  10:{skill:"일상 과업 파악",weak:"첫 핵심 정보 청취 약함",msg:"'쓰레기를 버리다(taking the garbage out)'처럼 일상적인 일을 표현하는 단어를 정확하게 듣는 연습이 필요해요"},
+  11:{skill:"갑작스러운 사건 파악",weak:"heard 목적어+장소 동시 처리 약함",msg:"'옆집에서 이상한 소리가 들렸다(noise in the house next door)'처럼 들린 것과 어디서 들렸는지를 함께 듣는 연습이 필요해요"},
+  12:{skill:"감정·판단 파악",weak:"판단 형용사 청취 누락",msg:"인물이 상황을 어떻게 느꼈는지(creepy) 판단하는 표현을 놓치지 않는 연습이 도움이 됩니다"},
+  13:{skill:"명시적 세부정보 파악",weak:"인물별 행동 혼동",msg:"'엄마가 할머니를 데리고 쇼핑을 간다'처럼 누가 무엇을 하는지 인물별로 파악하는 연습이 필요해요"},
+  14:{skill:"시간대별 계획 파악",weak:"아침/오후 정보 혼동",msg:"오전 계획과 오후 계획을 구분해서 읽는 연습이 필요해요. 시간 표현(in the morning/afternoon)을 표시하며 읽으면 도움이 돼요"},
+  15:{skill:"인물 기대·추론",weak:"속마음 추론 부족",msg:"인물이 속으로 무엇을 기대하는지 직접 쓰여 있지 않아도 상황에서 추론하는 연습이 도움이 됩니다"},
+  16:{skill:"이유 파악",weak:"이유 근거 문장 연결 약함",msg:"선생님이 Jimmy를 왜 불렀는지(because of perfect score) 이유를 찾아 연결하는 연습이 필요해요"},
+  17:{skill:"원인-결과 파악",weak:"비유 표현 직역 오류",msg:"'그의 머리가 다 했다(his head did all the work)'가 '스스로 잘 이해한다'는 의미인 것처럼 비유 표현을 이해하는 연습이 도움이 됩니다"},
+  18:{skill:"인물 특징 종합",weak:"대조적 성격 종합 약함",msg:"'영리하지만 수줍음이 많다(clever but shy)'처럼 두 가지 성격을 함께 파악하는 연습이 필요해요"},
+  19:{skill:"걱정의 이유 파악",weak:"부정형 읽기 약함",msg:"Julie가 왜 걱정했는지(시험을 잊고 있었기 때문)를 부정 표현을 포함해 정확히 읽는 연습이 도움이 됩니다"},
+  20:{skill:"발화 내용 파악",weak:"속마음과 실제 발화 혼동",msg:"인물이 실제로 뭐라고 말했는지(said)와 속으로 생각한 것(thought)을 구분하는 연습이 필요해요"},
+  21:{skill:"명시 정보 파악",weak:"knew that 구문 이해 약함",msg:"'Julie는 속이는 것이 잘못이라는 걸 알고 있었다'처럼 인물이 알고 있던 사실을 정확히 찾는 연습이 필요해요"},
+  22:{skill:"관찰 이유 파악",weak:"인물 이름과 소유격 혼동",msg:"Jake가 Matt의 신발을 왜 쳐다봤는지 이유를 인물 이름과 함께 정확히 읽는 연습이 도움이 됩니다"},
+  23:{skill:"조건부 미래 파악",weak:"when절 조건 처리 약함",msg:"'형이 다 자라면(when his brother grows out of them)' 신발을 물려받는다는 조건부 표현을 이해하는 연습이 필요해요"},
+  24:{skill:"사건 세부정보 파악",weak:"left/right 방향과 주어 혼동",msg:"'왼쪽 신발이 날아갔다(left shoe flew off)'처럼 방향과 무엇이 일어났는지를 정확히 읽는 연습이 도움이 됩니다"},
+  25:{skill:"문맥상 형용사 선택",weak:"생일 문맥 적용 약함",msg:"생일 케이크처럼 특별한 상황에 어울리는 단어(special)를 선택하는 연습이 필요해요"},
+  26:{skill:"문맥상 동사 선택",weak:"announce 동사 용례 약함",msg:"'발표하다(announced)'처럼 공식적으로 알리는 상황에 맞는 동사를 고르는 연습이 도움이 됩니다"},
+  27:{skill:"동사 의미 파악",weak:"spot의 동사 의미 모름",msg:"'spot'이 '찾아내다/발견하다'라는 뜻으로 쓰이는 것처럼 단어의 다양한 의미를 문장에서 파악하는 연습이 필요해요"},
+  28:{skill:"밑줄 어휘 의미",weak:"reach의 장소 도착 의미 약함",msg:"'reached'가 '도착했다(arrived at)'는 뜻으로 쓰인 것처럼 단어가 문장에서 어떤 뜻으로 쓰이는지 파악하는 연습이 필요해요"},
+  29:{skill:"어휘 의미 파악",weak:"cheering 장면화 약함",msg:"'환호하다(cheering)'가 운동경기에서 응원하는 모습임을 그림처럼 떠올려 의미를 이해하는 연습이 도움이 됩니다"},
+  30:{skill:"미래진행형 구조",weak:"will be + V-ing 구조 미숙",msg:"'일 년 후에 여행하고 있을 것이다(will be traveling)'처럼 미래의 진행 중인 동작을 표현하는 방법을 익히는 연습이 필요해요"},
+  31:{skill:"주어-동사 수일치",weak:"3인칭 단수 -s/-es 규칙 오류",msg:"'그녀는 매일 학교 앞을 지나간다(She passes)'처럼 she/he/it로 시작하는 문장에서 동사에 -s를 붙이는 규칙을 익히면 좋아요"},
+  32:{skill:"불규칙 과거형",weak:"take-took 과거형 약함",msg:"'어젯밤에 약을 먹었다(took)'처럼 take의 과거형 took을 시간 단서와 함께 사용하는 연습이 필요해요"},
+  33:{skill:"일반동사 의문문",weak:"Does 뒤 동사원형 오류",msg:"'그녀는 요리를 하나요? → Does she cook?'처럼 does 뒤에는 동사 원형만 써야 한다는 규칙을 익히는 연습이 필요해요"}
+},
+
+// ── L2 (LSB) ─────────────────────────────────────────────────
+L2: {
+  1:{skill:"인물 특징 세부 청취",weak:"명사+형용사 묶음 청취 약함",msg:"이야기 첫 부분에서 인물의 기본 정보(오래된 고양이 Mimi)를 빠르게 파악하는 연습이 필요해요"},
+  2:{skill:"인물 묘사 정보 파악",weak:"여러 특징 중 핵심 구분 약함",msg:"인물의 여러 특징 중 가장 중요한 정보(늙고 아픈)를 선별해서 듣는 연습이 도움이 됩니다"},
+  3:{skill:"고유 표현 음가 식별",weak:"유사 음가 보기 변별 약함",msg:"'Super Chicken'처럼 특정 이름이나 고유 표현을 정확하게 듣고 유사 발음과 구분하는 연습이 필요해요"},
+  4:{skill:"인물 특성 종합",weak:"세부 문장 전체 요약 약함",msg:"여러 문장에 걸쳐 설명된 인물의 특성을 하나로 요약하는(popular) 연습이 필요해요"},
+  5:{skill:"추상어 감정 청취",weak:"attention 추상어 이해 약함",msg:"'주목받는 느낌(the feeling of being liked)'처럼 추상적인 감정 표현을 듣고 이해하는 연습이 도움이 됩니다"},
+  6:{skill:"대조 인물 파악",weak:"두 인물 정보 혼동",msg:"Peter와 Matt처럼 두 인물이 나올 때 각자의 특징을 따로 정리하며 듣는 연습이 필요해요"},
+  7:{skill:"선호 대상 파악",weak:"직접+보조 단서 연결 약함",msg:"인물이 좋아하는 것(sports)을 관련 단서(Sports Daily)와 함께 연결해 듣는 연습이 도움이 됩니다"},
+  8:{skill:"문맥 속 다의어 청취",weak:"lying의 다의어 문맥 해석 약함",msg:"'lying in bed(침대에 누워 있다)'처럼 단어가 상황에 따라 다른 뜻을 가질 때 문맥으로 의미를 파악하는 연습이 필요해요"},
+  9:{skill:"크기·묘사 누적 파악",weak:"누적 묘사 종합 약함",msg:"'세상에서 가장 큰 침대'처럼 여러 묘사 표현을 종합해서 판단하는 연습이 도움이 됩니다"},
+  10:{skill:"복수 목적어 세부 청취",weak:"유사 소리 복수 명사 변별 약함",msg:"'쿠키와 사탕(cookies and candies)'처럼 두 단어가 함께 나올 때 두 개 모두 정확하게 듣는 연습이 필요해요"},
+  11:{skill:"비교 표현 청취",weak:"as big as 구조 이해 약함",msg:"'골프공만큼 크다(as big as golf balls)'처럼 비교 표현을 듣고 크기를 이해하는 연습이 도움이 됩니다"},
+  12:{skill:"실제 행동 근거 청취",weak:"상식적 추측보다 텍스트 근거 약함",msg:"이야기에서 인물이 실제로 한 행동(watched the ants march)이 무엇인지 정확하게 찾는 연습이 필요해요"},
+  13:{skill:"직접 정보 독해",weak:"핵심 동사와 목적어 연결 약함",msg:"'무덤을 탐험하고 싶었다(wanted to explore the tombs)'처럼 인물의 바람을 나타내는 동사와 목적어를 연결하는 연습이 필요해요"},
+  14:{skill:"이유 파악",weak:"이유 근거 문장 찾기 약함",msg:"'위험하기 때문에(because it's dangerous)' 왜 가면 안 되는지 이유를 이야기에서 찾는 연습이 도움이 됩니다"},
+  15:{skill:"인물 의도 추론",weak:"보호 의도 추론 약함",msg:"직접 쓰여 있지 않아도 아빠의 말과 행동에서 '보호하려는 마음'을 추론하는 연습이 필요해요"},
+  16:{skill:"공지 내용 파악",weak:"핵심 공지와 배경 정보 혼동",msg:"신문 기사나 공지에서 누가 무엇을 하는지 핵심 정보를 찾는 연습이 도움이 됩니다"},
+  17:{skill:"발화 의미 추론",weak:"수사적 질문 의미 파악 약함",msg:"'그 오디션에 몇 명이나 지원할지 알아?(Do you know how many girls...?)' 같은 수사적 질문이 걱정을 표현한다는 것을 파악하는 연습이 필요해요"},
+  18:{skill:"요청 파악",weak:"대화 마지막 요청 표현 약함",msg:"대화 마지막에 나오는 요청 표현(Will you make me an appointment?)을 정확하게 파악하는 연습이 도움이 됩니다"},
+  19:{skill:"동기 파악",weak:"직접적 동기 연결 약함",msg:"Jenny가 팀에 들어가고 싶었던 진짜 이유(always wanted to be on a sports team)를 이야기에서 찾는 연습이 필요해요"},
+  20:{skill:"NOT 문항 처리",weak:"NOT 조건 누락 오류",msg:"'일어나지 않은 일을 고르세요(NOT true)' 유형에서 보기를 하나씩 확인하며 지문에서 근거를 찾는 연습이 필요해요"},
+  21:{skill:"감정 원인 파악",weak:"감정 원인 because of 연결 약함",msg:"Jenny가 소외감을 느낀 이유(Lisa의 태도, 다른 선수들이 무시해서)를 이야기에서 정확하게 찾는 연습이 도움이 됩니다"},
+  22:{skill:"강조 표현 독해",weak:"especially 강조어 파악 약함",msg:"'특히(especially)'처럼 강조하는 단어 앞에 가장 중요한 정보가 있다는 것을 익히는 연습이 필요해요"},
+  23:{skill:"인물 일정 파악",weak:"다인물 행동 혼동",msg:"두 인물이 나올 때 Ben의 계획과 Eddie의 계획을 따로 파악하는 연습이 도움이 됩니다"},
+  24:{skill:"추론·paraphrase",weak:"wonder if 표현 paraphrase 약함",msg:"'혼자 가야 할지 고민했다(wondered if he should go)'가 '확신이 없다(isn't sure)'는 뜻임을 이해하는 연습이 필요해요"},
+  25:{skill:"문맥 동사 선택",weak:"expecting 현재분사 구조 약함",msg:"'기대하며(expecting him to say no)' 친구를 바라봤다는 문맥에서 알맞은 동사를 고르는 연습이 필요해요"},
+  26:{skill:"부사 문맥 적용",weak:"directly 부사 collocation 약함",msg:"'곧장 극장으로 갔다(went directly to the theater)'처럼 go와 자연스럽게 어울리는 부사를 선택하는 연습이 도움이 됩니다"},
+  27:{skill:"동작 동사 문맥 선택",weak:"examine-closely 호응 약함",msg:"'지도를 자세히 살펴봤다(examined it closely)'처럼 목적어와 부사에 어울리는 동사를 고르는 연습이 필요해요"},
+  28:{skill:"형용사 의미 추론",weak:"상황 단서 추론 약함",msg:"'개는 말을 못하니까 말하는 척은 말도 안 된다(ridiculous)'처럼 상황 단서로 형용사 의미를 추론하는 연습이 도움이 됩니다"},
+  29:{skill:"어휘 의미 파악",weak:"cheering 장면화 약함",msg:"군중이 '환호하다(cheering)'는 것을 운동경기 응원 장면으로 떠올려 이해하는 연습이 필요해요"},
+  30:{skill:"주어-동사 수일치",weak:"carries의 y→ies 변화 규칙 약함",msg:"'그 여자아이는 가방에 책을 들고 다닌다(carries)'처럼 y로 끝나는 동사가 -ies로 바뀌는 규칙을 익히는 연습이 필요해요"},
+  31:{skill:"미래시제 be going to",weak:"be going to 주어 수 일치 약함",msg:"'그들은 버스를 탈 것이다(are going to take a bus)'처럼 주어에 맞게 am/is/are를 선택하는 연습이 도움이 됩니다"},
+  32:{skill:"조동사 운용",weak:"should 뒤 동사원형 오류",msg:"'should + 동사 원형(work out)'처럼 should 뒤에는 동사의 기본형을 쓴다는 규칙을 익히는 연습이 필요해요"},
+  33:{skill:"과거진행시제",weak:"was eating + when절 연결 약함",msg:"'Kate는 갑자기 쥐를 봤을 때 아침을 먹고 있었다(was eating when she saw)'처럼 과거의 진행 중인 동작을 표현하는 방법을 익히는 연습이 필요해요. 4점 문항이에요"}
+},
+
+// ── L3 (LSC) ─────────────────────────────────────────────────
+L3: {
+  1:{skill:"인물 외형 세부 청취",weak:"대비 표현 속 핵심 정보 유지 약함",msg:"Victor의 생김새(생강색 머리, 녹색 눈)처럼 여러 묘사 중 중요한 정보를 놓치지 않는 연습이 필요해요"},
+  2:{skill:"신체 부위 묘사 파악",weak:"주변 묘사와 핵심 정보 혼동",msg:"Victor의 특이한 특징(놀랍도록 작은 이)처럼 예상 밖의 묘사 정보를 정확하게 듣는 연습이 도움이 됩니다"},
+  3:{skill:"반복 행동 파악",weak:"oversized/baggy 어휘 약함",msg:"Victor가 항상 큰 옷을 입는다(always wore oversized clothes)는 습관을 정확하게 파악하는 연습이 필요해요"},
+  4:{skill:"장소 단서 종합",weak:"장소 단서로 setting 추론 약함",msg:"'새 터널', '더 어둡고 차가운 동굴' 같은 단서를 종합해서 장소를 파악하는 연습이 도움이 됩니다"},
+  5:{skill:"구동사 행동 청취",weak:"blow out 등 구동사 청취 약함",msg:"'양초를 불어 껐다(blew it out)'처럼 두 단어로 이루어진 동작 표현을 정확하게 듣는 연습이 필요해요"},
+  6:{skill:"이유 파악",weak:"because 없이 제시된 이유 약함",msg:"'우리가 길을 잃었기 때문에 양초를 아껴야 한다'처럼 직접 because가 없어도 이유를 찾는 연습이 도움이 됩니다"},
+  7:{skill:"중심 활동 파악",weak:"spend time V-ing 구조 청취 약함",msg:"Kate가 시간을 무엇에 쓰는지(designing inventions) 핵심 활동을 정확하게 파악하는 연습이 필요해요"},
+  8:{skill:"발명품 기능 파악",weak:"could use to 기능 표현 약함",msg:"'물 위를 걸을 수 있는 풍선 신발(could use to walk on water)'처럼 발명품의 기능을 정확하게 듣는 연습이 도움이 됩니다"},
+  9:{skill:"결과절 파악",weak:"so that 결과 연결 약함",msg:"'버튼을 누르면 자전거가 아주 빠르게 달린다(so that it would go super-fast)'처럼 원인과 결과를 연결해 듣는 연습이 필요해요"},
+  10:{skill:"감정 이유 파악",weak:"감정 원인 because 청취 약함",msg:"드래곤이 슬픈 이유(사람이 아기를 훔쳤기 때문)를 정확하게 파악하는 연습이 도움이 됩니다"},
+  11:{skill:"대명사 지시 대상 파악",weak:"he가 가리키는 대상 추적 약함",msg:"이야기에서 'he'가 누구를 가리키는지(강력한 마법사) 따라가는 연습이 필요해요"},
+  12:{skill:"연결 추론",weak:"두 사건 연결 추론 약함",msg:"두 가지 사건(나쁜 마법사가 마을에 온 것 + 아기를 데려간 것)이 같은 인물과 관련됨을 연결하는 연습이 도움이 됩니다"},
+  13:{skill:"NOT 문항 처리",weak:"ears/eyes 등 세부 단어 혼동",msg:"신체 부위 묘사에서 'ears(귀)와 eyes(눈)'처럼 비슷한 단어를 정확하게 구분하는 연습이 필요해요"},
+  14:{skill:"발화 의미 추론",weak:"대화 맥락 감정 추론 약함",msg:"Robert가 혈거인이냐고 물었을 때 Sand Fairy가 왜 노려봤는지(모욕감을 느꼈기 때문) 대화 상황에서 추론하는 연습이 도움이 됩니다"},
+  15:{skill:"능력 추론",weak:"과거 사례에서 능력 추론 약함",msg:"'예전에 소원을 들어줬다(granted wishes)'는 사실에서 이 생물이 소원을 들어주는 능력이 있다는 것을 추론하는 연습이 필요해요"},
+  16:{skill:"핵심 발표 내용 파악",weak:"반복 강조 문장 인식 약함",msg:"Señor Alonso가 뭐라고 발표했는지(기사가 되기로 결심했다) 핵심 발표 내용을 찾는 연습이 필요해요"},
+  17:{skill:"동기 파악",weak:"honor/justice 추상어 이해 약함",msg:"기사가 되고 싶은 이유(명예와 정의를 위해)처럼 추상적인 가치와 연결된 동기를 파악하는 연습이 도움이 됩니다"},
+  18:{skill:"인물 반응 추론",weak:"대화 흐름 기반 감정 추론 약함",msg:"Antonia가 처음엔 웃으려 했다가 농담이 아님을 알고 당황한 것처럼 감정 변화를 대화 흐름에서 추론하는 연습이 필요해요"},
+  19:{skill:"문제 원인 파악",weak:"행동과 결과 연결 약함",msg:"메모장을 창고에 두고 왔기 때문에(left notepad in Miss Jones's shed) 문제가 생겼다는 원인-결과를 파악하는 연습이 필요해요"},
+  20:{skill:"미래 결과 예측",weak:"will 미래 추측 근거 약함",msg:"선생님이 창고에 돌아가면 메모장을 발견할 것이라는 미래 결과를 상황에서 예측하는 연습이 도움이 됩니다"},
+  21:{skill:"인물 판단 추론",weak:"두 인물 관점 대비 약함",msg:"Tina가 상황을 걱정하지 않는 이유(증거가 없고 이름을 안 썼기 때문)를 Pete의 걱정과 대비해 파악하는 연습이 필요해요"},
+  22:{skill:"NOT 문항 처리",weak:"능력 설명과 사건 설명 혼동",msg:"드래곤이 마법사의 능력으로 '말하지 않은 것'을 찾는 NOT 유형 문제를 지문 근거를 하나씩 확인하면서 푸는 연습이 도움이 됩니다"},
+  23:{skill:"장소 정보 파악",weak:"cell/basement 공간 관계 약함",msg:"'지하실의 감옥(a cell in the basement)'처럼 장소 안에 또 장소가 있는 표현을 정확하게 읽는 연습이 필요해요"},
+  24:{skill:"암시적 제안 추론",weak:"조건문 기반 해결책 추론 약함",msg:"Elias가 직접 '도와줄게'라고 하지 않아도 'if절'에서 제안 의미를 파악하는 연습이 도움이 됩니다"},
+  25:{skill:"문맥 동사 선택",weak:"remain 동사 의미 약함",msg:"'해가 아직 조금 남아 있다(remained)'처럼 사라지지 않고 남아 있다는 의미의 동사를 문맥에서 선택하는 연습이 필요해요"},
+  26:{skill:"구동사 make up 의미",weak:"phrasal verb 의미 약함",msg:"'모험을 만들어내다(make up an adventure)'처럼 두 단어가 합쳐진 표현의 의미를 문장에서 파악하는 연습이 도움이 됩니다"},
+  27:{skill:"학술 동사 문맥 선택",weak:"to부정사 뒤 동사 선택 약함",msg:"'신비로운 것들을 조사하기를 좋아했다(liked to investigate)'처럼 문장 구조에 맞는 동사를 고르는 연습이 필요해요"},
+  28:{skill:"be familiar with 의미",weak:"관용 표현 의미 추론 약함",msg:"'동굴 입구 근처를 잘 알고 있다(familiar with)'처럼 'be familiar with'가 '잘 알다'는 뜻임을 익히는 연습이 필요해요"},
+  29:{skill:"관용 표현 make sense of",weak:"구문 의미 추론 약함",msg:"'이해하다(make sense of)'처럼 여러 단어가 합쳐진 표현의 의미를 문맥에서 파악하는 연습이 도움이 됩니다"},
+  30:{skill:"수량 표현 Quantifiers",weak:"a few + 복수 가산명사 오류",msg:"'이야기 몇 편(a few stories)'처럼 셀 수 있는 복수 명사 앞에 a few를 쓰는 규칙을 익히는 연습이 필요해요"},
+  31:{skill:"to부정사+부사 구조",weak:"to+부사+동사 어순 약함",msg:"'시험을 쉽게 공부하기 위해(to easily study for tests)'처럼 to부정사 안에서 부사가 어디에 오는지 익히는 연습이 필요해요"},
+  32:{skill:"비교급 강조 표현",weak:"much better than 구조 약함",msg:"'책보다 훨씬 낫다(much better than the book)'처럼 비교급 앞에 much를 써서 강조하는 표현을 익히는 연습이 도움이 됩니다"},
+  33:{skill:"현재완료 부정문",weak:"have not p.p. + yet 구조 약함",msg:"'아직 유럽에 가본 적이 없다(have not been to Europe yet)'처럼 경험의 현재완료 부정문을 익히는 연습이 필요해요. 4점 문항이에요"}
+},
+
+// ── L4 (LSD) ─────────────────────────────────────────────────
+L4: {
+  1:{skill:"직접 인용문 청취",weak:"직접 발화 청취 약함",msg:"'오늘은 안 돼, 쉬어야 해(not today, must rest)'처럼 인물이 직접 한 말을 정확하게 듣는 연습이 필요해요"},
+  2:{skill:"비교 구문 청취",weak:"not as ~ as 비교 이해 약함",msg:"'예전만큼 젊지 않다(not as young as she once was)'처럼 비교 표현을 듣고 상태 변화를 이해하는 연습이 도움이 됩니다"},
+  3:{skill:"행동으로 성격 추론",weak:"성격 추론 약함",msg:"'낮잠 자려고 준비하고 어머니 말에 무관심한' 행동을 통해 인물의 성격(게으른)을 추론하는 연습이 필요해요"},
+  4:{skill:"새 장면 핵심 사건 파악",weak:"여러 인물 중 사건 주체 혼동",msg:"늑대 굴에 들어온 것이 무엇인지(사람 아기) 빠르게 파악하는 연습이 도움이 됩니다"},
+  5:{skill:"행동 주체 파악",weak:"주어 추적 약함",msg:"Mother Wolf가 한 일(웃으며 지켜봤다)과 아기가 한 일(킥킥 웃었다)을 구분하는 연습이 필요해요"},
+  6:{skill:"인물 목적/욕구 파악",weak:"부가 정보와 인물 요구 혼동",msg:"Shere Khan이 '나에게 줘(Give him to me)'라고 말한 목적이 무엇인지 파악하는 연습이 도움이 됩니다"},
+  7:{skill:"목적에 따른 물건 파악",weak:"소유와 목적 혼동",msg:"Greta가 배낭을 무엇을 위해(quest를 위해) 챙겼는지 목적과 행동을 연결하는 연습이 필요해요"},
+  8:{skill:"양보절 원인 파악",weak:"although 구조 원인-결과 혼동",msg:"'막으려 했지만 준비가 잘 돼 있어서 허락했다(although tried, because well prepared)'처럼 양보 표현이 포함된 이유를 파악하는 연습이 도움이 됩니다"},
+  9:{skill:"이야기 목표 파악",weak:"세부 행동과 main goal 혼동",msg:"Greta의 임무가 무엇인지(Kay를 찾아 데려오는 것) 전체 목적을 파악하는 연습이 필요해요"},
+  10:{skill:"장소 계층 파악",weak:"공항 안의 구체 장소 구분 약함",msg:"공항 전체가 아니라 구체적으로 어느 구역에서(출발 구역) 팀을 만났는지 파악하는 연습이 도움이 됩니다"},
+  11:{skill:"새 인물 식별",weak:"기존 인물과 새 인물 혼동",msg:"Eddie가 처음 만난 사람이 누구인지(Annika) 대화에서 소개되는 새 인물을 정확하게 파악하는 연습이 필요해요"},
+  12:{skill:"미래 계획·의도 파악",weak:"최종 목적 청취 약함",msg:"Eddie가 탐험에서 가장 하고 싶은 것(사진을 찍고 싶다)처럼 대화 마지막의 의도 표현을 찾는 연습이 도움이 됩니다"},
+  13:{skill:"NOT 문항 처리",weak:"부정형 문항 처리 약함",msg:"사슴이 겪지 않은 일을 고르는 NOT 유형 문제에서 지문에서 근거를 하나씩 확인하는 연습이 필요해요"},
+  14:{skill:"제안 내용 파악",weak:"명시적 제안문 찾기 약함",msg:"Alice가 '계속 걷자'고 제안한 내용처럼 suggest/decide 등 제안 표현이 있는 문장을 찾는 연습이 도움이 됩니다"},
+  15:{skill:"원인 파악",weak:"because 없이 제시된 원인 약함",msg:"대화가 잘 안 된 이유(사물 이름이 기억나지 않아서)처럼 직접 이유 표현이 없어도 원인을 찾는 연습이 필요해요"},
+  16:{skill:"현재 행동 파악",weak:"여러 행동 중 현재 행동 구분 약함",msg:"Mowgli가 지금 하고 있는 일(가축 관련 일)을 다른 행동들과 구분해서 찾는 연습이 도움이 됩니다"},
+  17:{skill:"인물 정체 파악",weak:"동물 명칭 혼동",msg:"Bagheera가 표범(panther)이라는 것처럼 인물이 처음 소개될 때의 정보를 정확하게 파악하는 연습이 필요해요"},
+  18:{skill:"사실 일치 판단",weak:"인물 생각과 실제 사실 혼동",msg:"Mowgli가 무리에서 쫓겨났다는 사실과 Shere Khan의 생각을 구분해서 읽는 연습이 도움이 됩니다"},
+  19:{skill:"핵심 발견 내용 파악",weak:"발견 사실과 그 결과 혼동",msg:"팀이 발견한 것이 무엇인지(계곡의 공룡들) 발견 이후의 결과와 구분해서 파악하는 연습이 필요해요"},
+  20:{skill:"추론",weak:"직접 진술 없는 논리적 결론 추론 약함",msg:"사람들이 알게 되면 장소가 파괴될 것이라는 논리적 결론을 두 정보를 연결해서 추론하는 연습이 도움이 됩니다"},
+  21:{skill:"합의 내용 파악",weak:"대화 결론 파악 약함",msg:"모두가 그 장소를 인간으로부터 보호하기로 합의했다는 결론을 대화에서 찾는 연습이 필요해요"},
+  22:{skill:"비유 표현 의미 추론",weak:"fate is written 비유 직역 오류",msg:"'운명은 이미 정해져 있다(fate is already written)'처럼 비유적인 표현이 실제로 무슨 의미인지 파악하는 연습이 도움이 됩니다"},
+  23:{skill:"NOT TRUE 판별",weak:"긴 지문 인물 역할 추적 약함",msg:"Merlin이 왕과 왕비가 아닌 왕자를 보호한다는 사실처럼 NOT TRUE인 정보를 지문에서 하나씩 확인하는 연습이 필요해요"},
+  24:{skill:"미래 행동 추론",weak:"장기 목표 추론 약함",msg:"왕자가 어른이 될 때까지 보호한다는 Merlin의 장기 계획을 추론하는 연습이 도움이 됩니다"},
+  25:{skill:"감정 어휘 선택",weak:"감사 형용사 미세 차이 약함",msg:"'감사하는(grateful)'과 '기분 좋은(pleasant)'의 미세한 차이를 상황에 맞게 구분하는 연습이 필요해요"},
+  26:{skill:"동사 collocation",weak:"trust someone to do 구조 약함",msg:"'믿고 함께 살게 하다(trust you to live with us)'처럼 trust가 어떻게 쓰이는지 문장 구조와 함께 익히는 연습이 도움이 됩니다"},
+  27:{skill:"장소 묘사 어휘",weak:"in the distance 관용 표현 약함",msg:"'저 멀리 보이는 언덕(a hill in the distance)'처럼 거리를 나타내는 표현을 통째로 익히면 좋아요"},
+  28:{skill:"이동 맥락 어휘",weak:"route 의미 약함",msg:"'경로(route)'가 '계획된 이동 경로(planned path)'라는 뜻임을 여행 상황과 함께 익히는 연습이 필요해요"},
+  29:{skill:"형용사 의미 추론",weak:"useless -less 접미사 이해 약함",msg:"'쓸모없다(useless)'처럼 당기는 것이 실패한 상황에서 문맥 단서로 단어 의미를 추론하는 연습이 도움이 됩니다"},
+  30:{skill:"과거진행 부정문",weak:"was not + V-ing 구조 약함",msg:"'학교를 떠날 때 비가 오고 있지 않았다(was not raining)'처럼 과거의 진행 중이지 않았던 상황을 표현하는 연습이 필요해요"},
+  31:{skill:"양보 접속사",weak:"even though 의미 적용 약함",msg:"'공부를 안 했는데도 만점을 받았다(even though)'처럼 반대되는 상황을 연결할 때 even though를 쓰는 연습이 도움이 됩니다"},
+  32:{skill:"과거완료 시제",weak:"had p.p. 선후 관계 약함",msg:"'학교에 가기 전에 숙제를 이미 끝냈다(had finished before went)'처럼 두 과거 사건의 순서를 나타내는 표현을 익히는 연습이 필요해요"},
+  33:{skill:"부사구 어순",weak:"carefully write 부사 위치 약함",msg:"부사(carefully)가 동사(write) 바로 앞에 오는 어순을 익히는 연습이 필요해요. 4점 문항이에요"}
+}
+}; // Q_DETAIL 끝
+
+// ── 패턴 감지 ──────────────────────────────────────────────────
+function detectPatterns(testLevel, wrongQs, areaName) {
+  var pats = [];
+  if (!Q_DETAIL[testLevel]) return pats;
+  var skills = wrongQs.map(function(q){ return Q_DETAIL[testLevel][q] ? Q_DETAIL[testLevel][q].skill : ''; }).filter(Boolean);
+
+  if (areaName.indexOf('Listen') >= 0) {
+    var cnt = {인물:0, 감정:0, 사건:0, 대화:0, NOT:0};
+    wrongQs.forEach(function(q){
+      var s = (Q_DETAIL[testLevel][q] || {}).skill || '';
+      if (s.indexOf('인물') >= 0 || s.indexOf('대조') >= 0) cnt.인물++;
+      if (s.indexOf('감정') >= 0) cnt.감정++;
+      if (s.indexOf('사건') >= 0 || s.indexOf('행동') >= 0 || s.indexOf('이동') >= 0) cnt.사건++;
+      if (s.indexOf('대화') >= 0 || s.indexOf('목적지') >= 0 || s.indexOf('계획') >= 0) cnt.대화++;
+      if (s.indexOf('NOT') >= 0) cnt.NOT++;
+    });
+    if (cnt.인물 >= 2) pats.push("여러 인물이 나오는 이야기에서 누가 무엇을 했는지 구분하기가 어려운 편이에요");
+    if (cnt.감정 >= 2) pats.push("이야기 속 인물의 감정이 왜 변했는지 원인을 파악하는 것이 아직 어렵게 느껴질 수 있어요");
+    if (cnt.사건 >= 2) pats.push("이야기의 사건 흐름을 처음부터 끝까지 따라가는 연습이 더 필요해요");
+    if (cnt.대화 >= 2) pats.push("대화 상황에서 핵심 정보(장소, 이유, 계획)를 빠르게 잡는 훈련이 도움이 됩니다");
+    if (cnt.NOT >= 1) pats.push("'사실이 아닌 것을 고르세요' 유형의 문제에서 지문을 하나씩 확인하는 연습이 필요해요");
+  }
+
+  if (areaName.indexOf('Read') >= 0) {
+    var notCnt = wrongQs.filter(function(q){ return (Q_DETAIL[testLevel][q]||{}).skill.indexOf('NOT') >= 0; }).length;
+    var infCnt = wrongQs.filter(function(q){ return (Q_DETAIL[testLevel][q]||{}).skill.indexOf('추론') >= 0; }).length;
+    var whyCnt = wrongQs.filter(function(q){ return (Q_DETAIL[testLevel][q]||{}).skill.indexOf('이유') >= 0 || (Q_DETAIL[testLevel][q]||{}).skill.indexOf('원인') >= 0; }).length;
+    if (notCnt >= 1) pats.push("'아닌 것 고르기' 유형에서 선택지를 하나씩 지문과 대조하는 습관이 중요해요");
+    if (infCnt >= 2) pats.push("직접 적혀 있지 않은 내용을 상황에서 파악하는 추론 능력을 더 키울 필요가 있어요");
+    if (whyCnt >= 2) pats.push("'왜?'라는 이유 찾기 문제에서 근거 문장을 찾는 연습이 꾸준히 필요해요");
+  }
+
+  if (areaName.indexOf('Grammar') >= 0) {
+    var tenseCnt = wrongQs.filter(function(q){ var s=(Q_DETAIL[testLevel][q]||{}).skill||''; return s.indexOf('시제')>=0||s.indexOf('과거')>=0||s.indexOf('미래')>=0||s.indexOf('완료')>=0; }).length;
+    var agreeCount = wrongQs.filter(function(q){ var s=(Q_DETAIL[testLevel][q]||{}).skill||''; return s.indexOf('수일치')>=0||s.indexOf('일치')>=0; }).length;
+    if (tenseCnt >= 2) pats.push("현재·과거·미래 시제를 구분해서 쓰는 연습이 더 필요해요");
+    if (agreeCount >= 1) pats.push("주어에 맞게 동사 형태를 바꾸는 규칙을 익히는 연습이 필요해요");
+  }
+
+  return pats;
+}
+
+// ── 핵심: 분석 생성 함수 ───────────────────────────────────────
+function generateAnalysis(s) {
+  var cfg = window.LEVEL_CFG && window.LEVEL_CFG[s.testLevel];
+  if (!cfg) return null;
+  var wrongs = s.wrongSet || [];
+  var hasScore = cfg.areas.some(function(a){ return s.scores && s.scores[a.key] != null; });
+  if (!hasScore && !wrongs.length) return null;
+
+  var det = Q_DETAIL[s.testLevel] || {};
+
+  var areaStats = cfg.areas.map(function(area) {
+    var inputScore = (s.scores && s.scores[area.key] != null) ? s.scores[area.key] : null;
+    var pct = inputScore != null ? Math.round(inputScore / area.max * 100) : null;
+    var wrongQs = area.qs.filter(function(q){ return wrongs.indexOf(q) >= 0; });
+
+    // 문항별 세부 메시지 수집
+    var msgs = wrongQs.map(function(q){
+      var d = det[q];
+      return d ? { q: q, skill: d.skill, msg: d.msg } : { q: q, skill: q+'번', msg: '' };
+    });
+
+    // 고유 skill 묶기
+    var skillGroups = {};
+    msgs.forEach(function(m){
+      if (!skillGroups[m.skill]) skillGroups[m.skill] = { skill: m.skill, qs: [], msg: m.msg };
+      skillGroups[m.skill].qs.push(m.q);
+    });
+    var skillList = Object.values(skillGroups);
+
+    // 패턴 감지
+    var patterns = detectPatterns(s.testLevel, wrongQs, area.name);
+
+    // 학부모 친화적 코멘트 생성
+    var shortName = area.name.split(' ')[0];
+    var comment = '';
+
+    if (wrongQs.length === 0 && pct != null) {
+      if (pct >= 90) comment = shortName + ' 영역에서 뛰어난 실력을 보여주고 있어요. 이 수준을 유지하면 수업에서도 자신감 있게 참여할 수 있을 거예요.';
+      else if (pct >= 75) comment = shortName + ' 영역은 전반적으로 잘 이해하고 있어요. 조금 더 연습하면 더욱 안정적인 실력이 될 것 같아요.';
+      else if (pct >= 50) comment = shortName + ' 영역에서 기본적인 내용은 이해하고 있지만, 더 탄탄하게 만들기 위한 추가 연습이 도움이 될 거예요.';
+      else comment = shortName + ' 영역을 전반적으로 보완하는 학습이 필요해요. 기초부터 차근차근 다시 살펴보면 금방 좋아질 수 있어요.';
+    } else if (wrongQs.length > 0) {
+      var patStr = patterns.length ? ' ' + patterns[0] : '';
+      var topMsgs = skillList.slice(0, 2).map(function(g){ return g.msg; }).filter(Boolean);
+
+      if (pct == null || pct >= 90) {
+        comment = '대부분 잘 맞혔어요!';
+        if (skillList.length) comment += ' 특히 ' + skillList[0].skill + ' 부분만 한 번 더 확인하면 완벽해질 것 같아요.';
+      } else if (pct >= 75) {
+        comment = shortName + ' 영역에서 잘 하고 있어요.';
+        if (patStr) comment += patStr + '.';
+        if (topMsgs[0]) comment += ' ' + topMsgs[0];
+      } else if (pct >= 50) {
+        comment = shortName + ' 영역에서 ' + wrongQs.length + '개 문항이 틀렸어요.';
+        if (patStr) comment += patStr + '.';
+        if (topMsgs[0]) comment += ' ' + topMsgs[0];
+      } else {
+        comment = shortName + ' 영역을 집중적으로 보완하는 것이 필요해요.';
+        if (patStr) comment += patStr + '.';
+        if (topMsgs.length) comment += ' ' + topMsgs.slice(0, 2).join(' 또한, ');
+      }
+    }
+
+    return Object.assign({}, area, {
+      wrongQs: wrongQs, correctPts: inputScore, pct: pct,
+      comment: comment, skillList: skillList, patterns: patterns,
+      msgs: msgs
+    });
+  });
+
+  // 종합 의견
+  var scored = areaStats.filter(function(a){ return a.correctPts != null; });
+  var totalScore = scored.reduce(function(t,a){ return t + a.correctPts; }, 0);
+  var totalMax = scored.reduce(function(t,a){ return t + a.max; }, 0);
+  var totalPct = totalMax > 0 ? Math.round(totalScore / totalMax * 100) : null;
+  var strong = areaStats.filter(function(a){ return a.pct != null && a.pct >= 85; });
+  var weak = areaStats.filter(function(a){ return a.pct != null && a.pct < 65; });
+
+  var overall = '';
+
+  // 전체 성취도 문장
+  if (totalPct != null) {
+    if (totalPct >= 85) overall = '시험 전체에서 ' + totalPct + '%의 높은 성취율을 기록했어요. 이 레벨의 학습 내용을 충분히 소화한 것으로 보이며, 수업에서도 안정적으로 적응할 수 있을 것 같아요. ';
+    else if (totalPct >= 70) overall = '시험 전체적으로 ' + totalPct + '%의 양호한 성취를 보였어요. 기본기는 잘 갖춰져 있고, 몇 가지 부분만 보완하면 더욱 탄탄한 영어 실력을 쌓을 수 있어요. ';
+    else if (totalPct >= 50) overall = '기본적인 내용은 이해하고 있지만(' + totalPct + '%), 일부 영역에서 추가 연습이 필요해요. 꾸준히 보완하면 실력이 빠르게 좋아질 거예요. ';
+    else overall = '배정된 레벨에서 전반적으로 보완이 필요한 수준이에요(' + totalPct + '%). 기초부터 차근차근 다지면서 수업에 적응해 나가는 것이 좋을 것 같아요. ';
+  }
+
+  // 강점 영역
+  if (strong.length > 0) {
+    var strongNames = strong.map(function(a){ return a.name.split(' ')[0]; }).join(', ');
+    overall += strongNames + ' 영역은 강점으로, 수업에서 자신감 있게 참여할 수 있는 기반이 될 거예요. ';
+  }
+
+  // 취약 영역 - 구체적 설명
+  if (weak.length > 0) {
+    var weakDetails = [];
+    weak.forEach(function(a){
+      var topSkill = a.skillList && a.skillList[0] ? a.skillList[0].skill : null;
+      var topMsg = a.msgs && a.msgs[0] ? a.msgs[0].msg : null;
+      if (topMsg) weakDetails.push(topMsg);
+      else if (topSkill) weakDetails.push(a.name.split(' ')[0] + ' 영역의 ' + topSkill + ' 능력이 부족해요');
+    });
+    if (weakDetails.length) {
+      overall += '특히 ' + weakDetails[0];
+      if (weakDetails[1]) overall += ' 또한 ' + weakDetails[1];
+    }
+  }
+
+  if (!overall.trim()) overall = '오답 문항을 중심으로 영역별 보완 학습을 진행하면 더 좋은 결과가 있을 거예요.';
+
+  // 배정 레벨 의미 + 학습 방향 마무리 문장 추가 (중복 없이)
+  var closingMsg = '';
+  if (totalPct != null) {
+    if (totalPct >= 85) {
+      closingMsg = '배정된 레벨에서 충분한 준비가 되어 있으며, 수업 초반부터 자신 있게 참여할 수 있을 것으로 기대됩니다.';
+    } else if (totalPct >= 70) {
+      closingMsg = '배정 레벨에서 안정적으로 적응할 수 있는 수준이며, 초반에 취약 영역을 함께 보완하면 빠르게 실력을 끌어올릴 수 있어요.';
+    } else if (totalPct >= 50) {
+      closingMsg = '배정 레벨에서 보완 학습을 병행하면 수업 적응이 한층 수월해질 거예요. 선생님과 함께 꾸준히 나아가면 분명히 좋아집니다.';
+    } else {
+      closingMsg = '기초부터 차근차근 다질 수 있도록 수업 내에서 집중 지도가 이루어질 예정이에요. 함께 성장해 나갈 것을 기대합니다.';
+    }
+    overall = overall.trim() + ' ' + closingMsg;
+  }
+
+  return { areas: areaStats, overall: overall.trim() };
+}
+
+window.generateAnalysis = generateAnalysis;
+window.Q_DETAIL = Q_DETAIL;
+
+
+
+// ── 인쇄 ──────────────────────────────────────────────────────
+function printOne(){var s=collectForm()||students.find(function(x){return x.id===currentId;});if(!s||!s.name){showToast('학생 정보를 입력하고 저장해 주세요.');return;}openPrint([s]);}
+function openPrint(list){if(!list||!list.length){showToast('인쇄할 학생을 선택해 주세요.');return;}document.getElementById('print-title').textContent=list.length===1?list[0].name+' 성적표 미리보기':'성적표 '+list.length+'명 일괄 인쇄';document.getElementById('print-cards').innerHTML=list.map(function(s,i){return buildReportHtml(s,generateAnalysis(s))+(i<list.length-1?'<div class="pg-break"></div>':'');}).join('');document.getElementById('print-overlay').classList.add('open');}
+function closePrint(){document.getElementById('print-overlay').classList.remove('open');}
+
+function buildReportHtml(s,analysis){
+  var cfg=LEVEL_CFG[s.testLevel];
+  var total=null;if(cfg){var sum=0,has=false;cfg.areas.forEach(function(a){var v=s.scores&&s.scores[a.key];if(v!=null){sum+=v;has=true;}});if(has)total=sum;}
+  var ds=s.testDate?s.testDate.replace(/-/g,'.'):'—',pt=s.pretest||{};
+
+  var preHtml='';
+  if(s.showPretest){
+    var histText=s.learningHistory!=null&&HISTORY_ITEMS[s.learningHistory]?HISTORY_ITEMS[s.learningHistory]:null;
+    var ptHasData=[1,2,3].some(function(step){return pt[step]&&(pt[step].level||pt[step].score!=null);});
+    if(histText||ptHasData){
+      var ptR=[1,2,3].map(function(step){var d=pt[step]||{};if(!d.level&&(d.score==null||d.score===undefined))return'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:5px;font-size:9px">'+step+'단계 미응시</td></tr>';var bw=d.score!=null?d.score*10:0;return'<tr style="border-bottom:0.5px solid #e0f0e0"><td style="padding:5px 7px;text-align:center;font-weight:700;color:#1a3a5c">'+step+'단계</td><td style="padding:5px 7px;text-align:center"><span style="background:#e0f5e8;color:#1a5a2a;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700">'+(d.level||'—')+'</span></td><td style="padding:5px 7px;text-align:center;font-weight:700;color:#2c5282">'+(d.score!=null?d.score+' / 10':'—')+'</td><td style="padding:5px 7px"><div style="display:flex;align-items:center;gap:4px"><div style="flex:1;background:#edf2f8;border-radius:20px;height:9px;overflow:hidden"><div style="width:'+bw+'%;height:100%;background:#2d7a4f;border-radius:20px"></div></div><span style="font-size:9px;font-weight:700;color:#2d7a4f;min-width:26px;text-align:right">'+bw+'%</span></div></td></tr>';}).join('');
+      preHtml='<div class="rc-sec"><div class="rc-st" style="border-left-color:#2d7a4f">Online Pre-Test</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">'+(histText?'<div style="background:#f0fbf2;border:1px solid #b0d8b0;border-radius:6px;padding:9px 12px"><div style="font-size:9px;font-weight:700;color:#2d7a4f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">현재 영어 학습 능력</div><div style="font-size:11px;color:#1a4a2a;line-height:1.6">'+histText+'</div></div>':'<div></div>')+'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr><th style="background:#2d7a4f;color:#c8f0da;padding:5px 7px;text-align:center">단계</th><th style="background:#2d7a4f;color:#c8f0da;padding:5px 7px;text-align:center">레벨</th><th style="background:#2d7a4f;color:#c8f0da;padding:5px 7px;text-align:center">맞은 문항</th><th style="background:#2d7a4f;color:#c8f0da;padding:5px 7px;text-align:center">성취율</th></tr></thead><tbody>'+ptR+'</tbody></table></div></div><div class="rc-div"></div>';
+    }
+  }
+
+  var aHtml='';
+  if(cfg){
+    cfg.areas.forEach(function(a){var myS=s.scores&&s.scores[a.key]!=null?s.scores[a.key]:null;var myP=myS!=null?Math.round(myS/a.max*1000)/10:null;var avS=s.avgs&&s.avgs[a.key]!=null?s.avgs[a.key]:null;var avP=avS!=null?Math.round(avS/a.max*1000)/10:null;aHtml+='<tr><td style="width:170px;padding:5px 8px 5px 0;font-size:10px;color:#3a5a7a;vertical-align:middle"><strong style="display:block;font-size:11px;color:#1a3a5c;font-weight:700">'+a.name+'</strong><span style="font-size:9px;color:#8aa8c0">배점 '+a.max+'점</span></td><td style="padding:4px 6px;vertical-align:middle"><div style="display:flex;align-items:center;gap:5px;margin-bottom:'+(s.showAvg&&avS!=null?2:0)+'px"><span style="font-size:9px;color:#6b8aa8;width:58px;flex-shrink:0">My Score</span><div style="flex:1;background:#edf2f8;border-radius:20px;height:11px;overflow:hidden"><div style="width:'+(myP||0)+'%;height:100%;background:#2d6fb0;border-radius:20px"></div></div><span style="font-size:10px;font-weight:700;color:#2c5282;width:48px;text-align:right">'+(myS!=null?myS+'/'+a.max:'—')+'</span></div>'+(s.showAvg&&avS!=null?'<div style="display:flex;align-items:center;gap:5px"><span style="font-size:9px;color:#6b8aa8;width:58px;flex-shrink:0">Average</span><div style="flex:1;background:#edf2f8;border-radius:20px;height:11px;overflow:hidden"><div style="width:'+avP+'%;height:100%;background:#b0c8e0;border-radius:20px"></div></div><span style="font-size:10px;color:#8aa8c0;width:48px;text-align:right">'+Math.round(avS*10)/10+'점</span></div>':'')+'</td></tr>';});
+    if(total!=null){var tp=Math.round(total/cfg.total*1000)/10;var atT=s.showAvg?cfg.areas.reduce(function(s2,a){var v=s.avgs&&s.avgs[a.key];return v!=null?s2+v:s2;},0):null;var atp=atT!=null?Math.round(atT/cfg.total*1000)/10:null;aHtml+='<tr style="background:#f0f6fc"><td style="padding:5px 8px 5px 0;font-size:10px;vertical-align:middle"><strong style="font-size:12px;color:#1a3a5c;font-weight:700">Total Score</strong><br><span style="font-size:9px;color:#8aa8c0">만점 '+cfg.total+'점</span></td><td style="padding:4px 6px;vertical-align:middle"><div style="display:flex;align-items:center;gap:5px;margin-bottom:'+(s.showAvg&&atT!=null?2:0)+'px"><span style="font-size:9px;font-weight:700;color:#1a3a5c;width:58px;flex-shrink:0">My Score</span><div style="flex:1;background:#edf2f8;border-radius:20px;height:11px;overflow:hidden"><div style="width:'+tp+'%;height:100%;background:#2d6fb0;border-radius:20px"></div></div><span style="font-size:12px;font-weight:700;color:#2c5282;width:48px;text-align:right">'+total+'/'+cfg.total+'</span></div>'+(s.showAvg&&atT!=null?'<div style="display:flex;align-items:center;gap:5px"><span style="font-size:9px;font-weight:700;color:#6b8aa8;width:58px;flex-shrink:0">Average</span><div style="flex:1;background:#edf2f8;border-radius:20px;height:11px;overflow:hidden"><div style="width:'+atp+'%;height:100%;background:#b0c8e0;border-radius:20px"></div></div><span style="font-size:10px;color:#8aa8c0;width:48px;text-align:right">'+Math.round(atT*10)/10+'점</span></div>':'')+'</td></tr>';}
+  }
+
+  // 분석 카드 (입력 점수 기반 + 세부 능력 태그)
+  var analysisHtml='';
+  if(analysis&&analysis.areas){
+    var cards=analysis.areas.map(function(a){
+      var scoreTxt=a.correctPts!=null?a.correctPts+'/'+a.max:'—/'+a.max;
+      var barW=a.pct!=null?a.pct:0;
+      var pctTxt=a.pct!=null?a.pct+'%':'—';
+      var skillTagsHtml='';
+      if(a.skillList&&a.skillList.length){
+        skillTagsHtml='<div class="ac-skills">취약 능력: '+a.skillList.slice(0,3).map(function(g){return'<span style="display:inline-block;background:#e8f0fc;color:#2c5282;padding:0 4px;border-radius:3px;margin:1px;font-size:8px">'+g.skill+'('+g.qs.map(function(q){return q+'번';}).join('·')+')</span>';}).join('')+'</div>';
+      }
+      return'<div class="ac"><div class="ac-hd" style="background:'+a.color+'"><span class="ac-title">'+a.name+'</span><span class="ac-sb">총점 '+scoreTxt+'</span></div>'
+        +'<div class="ac-bd"><div class="ac-row"><span class="ac-lbl">정답률</span><div class="ac-bar"><div class="ac-fill" style="width:'+barW+'%;background:'+a.color+'"></div></div><span class="ac-pct" style="color:'+a.color+'">'+pctTxt+'</span></div>'
+        +(a.wrongQs&&a.wrongQs.length?'<div class="wrong-tags">오답: '+a.wrongQs.map(function(q){return'<span class="wrong-tag">'+q+'번</span>';}).join('')+'</div>':'')
+        +skillTagsHtml
+        +(a.comment?'<div class="ac-comment">'+a.comment+'</div>':'')
+        +'</div></div>';
+    }).join('');
+    analysisHtml='<div class="ac-grid">'+cards+'</div><div class="overall-box"><span class="overall-icon">💡</span><div class="overall-text"><strong>📋 학습 역량 진단 총평</strong>'+analysis.overall+'</div></div>';
+  }
+
+  var rmHtml='';
+  try{var gr2=parseInt(s.grade||''),svv=s.startSem||'',ch2=s.chessLevel||'',dt=s.testDate||'';if(gr2&&dt&&ch2&&svv){var ss2;if(svv==='즉시')ss2=dateToSem(dt);else{var sm2=+svv,y2=new Date(dt).getFullYear(),tm2=new Date(dt).getMonth()+1,mi={12:0,3:1,6:2,9:3},sy2=y2;if(sm2<tm2&&!(sm2===12&&tm2<=2))sy2=y2+1;ss2={year:sy2,semIdx:mi[sm2]};}var si3=-1;for(var ii=0;ii<ALL_SUBS.length;ii++)if(ALL_SUBS[ii].sub===ch2){si3=ii;break;}if(ss2&&si3>=0){var ste2=(5-gr2)*4+(3-ss2.semIdx),cm2={};for(var ii2=0;ii2<=ste2;ii2++){var s2=addSems(ss2,ii2),sub2=ALL_SUBS[si3+ii2];if(!sub2)break;cm2[(gr2+Math.floor((ss2.semIdx+ii2)/4))+'-'+s2.semIdx]={sub:sub2.sub,stage:sub2.stage,isNow:ii2===0,isLast:ii2===ste2};}var as2=addSems(ss2,ste2+1),ag2=gr2+Math.floor((ss2.semIdx+ste2+1)/4);cm2[ag2+'-'+as2.semIdx]={isAce:true};rmHtml='<table class="rc-rmt"><thead><tr><th>학년</th><th>12월~2월</th><th>3월~5월</th><th>6월~8월</th><th>9월~11월</th></tr></thead><tbody>';for(var g2=gr2;g2<=Math.min(6,ag2);g2++){rmHtml+='<tr><th style="font-weight:600;font-size:9px;background:#eaf2fb;color:#1a3a5c">'+(g2<=5?'초등 '+g2:'초등6~')+'</th>';for(var si4=0;si4<=3;si4++){var c2=cm2[g2+'-'+si4];if(!c2)rmHtml+='<td style="background:#f8f8f8;color:#aaa">—</td>';else if(c2.isAce)rmHtml+='<td style="background:#eeedfe"><span class="lv-chip lv-ACE" style="font-size:8px">ACE</span></td>';else rmHtml+='<td style="background:'+(c2.isNow?'#fff8e8':c2.isLast?'#eaf3de':'')+'"><span class="lv-chip lv-'+c2.stage+'" style="font-size:8px">'+c2.sub+'</span>'+(c2.isNow?'<br><span class="badge-now">수업시작</span>':'')+(c2.isLast?'<br><span class="badge-grad">졸업</span>':'')+'</td>';}rmHtml+='</tr>';}rmHtml+='</tbody></table>';}}}catch(e){}
+
+  return'<div class="rc"><div class="rc-hd"><div class="rc-logo"><span>C</span>HESS</div><div class="rc-hsub"><div class="t">Report Card</div><div class="s">정상어학원 입학시험 성적표</div></div><div class="rc-badge">PLACEMENT TEST</div></div>'
+    +'<div class="rc-ig"><div class="rc-ih">Name / 학생명</div><div class="rc-ih" style="background:#265480">School / 학교</div><div class="rc-ih" style="background:#1e4a70">Grade / 학년</div></div>'
+    +'<div class="rc-ig"><div class="rc-iv" style="font-size:12px;font-weight:700">'+s.name+(s.memberCode?'<span style="font-size:9px;font-weight:400;color:#8aa8c0;margin-left:4px">'+s.memberCode+'</span>':'')+'</div><div class="rc-iv">'+(s.school||'—')+'</div><div class="rc-iv">초등 '+(s.grade||'—')+'학년</div></div>'
+    +'<div style="height:3px;background:#f0f6fc"></div>'
+    +'<div class="rc-tg"><div class="rc-th">Date of Issue / 시험일</div><div class="rc-th">Test Level / 시험지</div><div class="rc-th" style="background:#1f6eaa">Total Score / 총점</div></div>'
+    +'<div class="rc-tg"><div class="rc-tv" style="color:#3a5a7a">'+ds+'</div><div class="rc-tv" style="font-size:11px;font-weight:700;color:#2d5f8a">'+(cfg?cfg.label:'—')+'</div><div class="rc-tv"><span class="rc-tn">'+(total!=null?total:'—')+'<span class="rc-dn">'+(cfg?'/'+cfg.total:'')+'</span></span></div></div>'
+    +preHtml
+    +(aHtml?'<div class="rc-sec"><div class="rc-st">성적 결과 / 분석</div><table class="rc-ct"><tbody>'+aHtml+'</tbody></table></div><div class="rc-div"></div>':'')
+    +(analysisHtml?'<div class="rc-sec"><div class="rc-st">영역별 오답 분석</div>'+analysisHtml+'</div><div class="rc-div"></div>':'')
+    +'<div class="rc-sec" style="padding-bottom:8px"><div class="rc-st">예상 반 정보</div><table class="rc-lt"><thead><tr><th>Level</th><th>Class Name</th><th>Class Time</th><th>Teacher</th><th>Classroom</th></tr></thead><tbody><tr><td><span class="rc-lb">'+(s.chessLevel||'—')+'</span></td><td style="font-weight:700">'+(s.className||'—')+'</td><td style="font-size:9px">'+(s.classTime||'—')+'</td><td>'+(s.teacher||'—')+'</td><td>'+(s.room||'—')+'</td></tr></tbody></table><div style="font-size:9px;color:#8aa8c0;padding:3px 0 0">° Level은 정상JLS의 표준평가정책에 의거한 기준이므로 요청에 의한 변동은 불가합니다<br>° 예상 반 정보는 동일 레벨 내 다른 Class로 이동 가능합니다. (정원 충족 시 이동 불가)</div></div>'
+    +'<div class="rc-div"></div>'
+    +(rmHtml?'<div class="rc-sec"><div class="rc-st">CHESS 과정 로드맵</div>'+rmHtml+'<div style="font-size:9px;color:#8aa8c0;margin-top:4px">위 로드맵은 학사 운영 기준에 따른 기본 학습 경로입니다. 학생의 학기말 성취도 평가(DT) 결과에 따라 개인별 학습 단계는 달라질 수 있습니다.</div></div><div class="rc-div"></div>':'')
+    +'<div class="rc-sec" style="padding-bottom:12px"><div class="rc-st">안내사항</div><div class="rc-nb">'+(s.notice||'—')+'</div></div>'
+    +'<div class="rc-ft"><span style="color:#7a9ab8;font-size:9px">정상어학원 · 본 성적표는 입학 상담 목적으로 발급됩니다</span><span style="font-family:Georgia,serif;font-weight:700;color:#4db8e8;font-size:12px;letter-spacing:1px">CHESS</span></div></div>';
+}
+
+function excelDateToStr(v){if(!v)return'';if(typeof v==='string'){var m=v.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');}if(typeof v==='number'){var d=new Date((v-25569)*86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}return String(v);}
+function handleFile(file){
+  if(!file)return;var ok=document.getElementById('upload-ok'),er=document.getElementById('upload-err');ok.style.display='none';er.style.display='none';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{var wb2=XLSX.read(e.target.result,{type:'array'}),ws=wb2.Sheets[wb2.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    var data=rows.slice(4).filter(function(r){return r[1]&&String(r[1]).trim();});
+    if(!data.length){er.textContent='5행부터 데이터를 입력해 주세요.';er.style.display='';return;}
+    var added=0,skipped=0,warns=[],newStudents=[];
+    data.forEach(function(r){var name=String(r[1]||'').trim();if(!name){skipped++;return;}var lv=String(r[6]||'').trim(),cfg=LEVEL_CFG[lv],startSem=parseStart(String(r[5]||'').trim());var scores={},avgs={};[[8,'a1'],[9,'a2'],[10,'a3'],[11,'a4']].forEach(function(p){var v=r[p[0]];if(v!==''&&v!=null&&!isNaN(v))scores[p[1]]=parseFloat(v);});[[14,'a1'],[15,'a2'],[16,'a3'],[17,'a4']].forEach(function(p){var v=r[p[0]];if(v!==''&&v!=null&&!isNaN(v))avgs[p[1]]=parseFloat(v);});if(cfg)cfg.areas.forEach(function(a){var v=scores[a.key];if(v!=null&&v>a.max)warns.push(name+' 영역'+a.n+' 초과');});var s={id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),memberCode:String(r[0]||'').trim(),name:name,school:String(r[2]||'').trim(),grade:String(r[3]||'').trim(),testDate:excelDateToStr(r[4]),startSem:startSem,testLevel:lv,chessLevel:String(r[20]||'').trim(),className:String(r[21]||'').trim(),classTime:String(r[22]||'').trim(),teacher:String(r[23]||'').trim(),room:String(r[24]||'').trim(),notice:'',showAvg:Object.keys(avgs).length>0,showPretest:false,scores:scores,avgs:avgs,wrongSet:[],pretest:{},learningHistory:null,updatedAt:Date.now()};students.unshift(s);newStudents.push(s);added++;});
+    persistAll(newStudents);renderSidebar();var msg='✓ '+added+'명 업로드 완료'+(skipped?' ('+skipped+'명 건너뜀)':'');if(warns.length)msg+='\n\n⚠ 점수 초과:\n'+warns.join('\n');ok.textContent=msg;ok.style.display='';showToast(added+'명 업로드 완료!');
+    }catch(e2){er.textContent='파일 읽기 오류: '+e2.message;er.style.display='';}
+  };
+  reader.readAsArrayBuffer(file);
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+function showEmpty(){currentId=null;isDirty=false;document.getElementById('topbar-title').textContent='학생을 선택하거나 새로 추가하세요';document.getElementById('editing-badge').style.display='none';['btn-save','btn-print-one','btn-del'].forEach(function(id){document.getElementById(id).style.display='none';});document.getElementById('main-content').innerHTML='<div class="empty"><i class="ti ti-file-text"></i><p>좌측에서 학생을 선택하거나 새 학생을 추가하세요</p></div>';}
+
+loadStudents();
+</script>
+</body>
+</html>
