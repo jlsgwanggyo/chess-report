@@ -275,46 +275,46 @@ function showSyncStatus(msg, color) {
   if (el) { el.textContent = msg; el.style.color = color || '#6b7280'; }
 }
 
-// JSONP 방식으로 GET (CORS 우회)
-function gasGet(url) {
+// JSONP 방식으로 모든 요청 처리 (GET만 사용 → CORS 완전 우회)
+function gasJsonp(params) {
   return new Promise(function(resolve) {
-    var cbName = 'cb_' + Date.now();
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*9999);
     var script = document.createElement('script');
     var timer = setTimeout(function() {
       delete window[cbName];
-      document.body.removeChild(script);
+      if (script.parentNode) script.parentNode.removeChild(script);
       resolve({ ok: false, error: 'timeout' });
-    }, 10000);
+    }, 15000);
     window[cbName] = function(data) {
       clearTimeout(timer);
       delete window[cbName];
-      try { document.body.removeChild(script); } catch(e) {}
+      if (script.parentNode) script.parentNode.removeChild(script);
       resolve(data);
     };
-    script.src = url + '?callback=' + cbName + '&t=' + Date.now();
+    var qs = 'callback=' + cbName + '&t=' + Date.now();
+    Object.keys(params).forEach(function(k) {
+      qs += '&' + k + '=' + encodeURIComponent(
+        typeof params[k] === 'object' ? JSON.stringify(params[k]) : params[k]
+      );
+    });
+    script.src = GAS_URL + '?' + qs;
     script.onerror = function() {
       clearTimeout(timer);
       delete window[cbName];
-      resolve({ ok: false, error: 'script load error' });
+      resolve({ ok: false, error: 'network error' });
     };
     document.body.appendChild(script);
   });
 }
-// POST는 no-cors 모드로 (저장/삭제)
+function gasGet(url) {
+  return gasJsonp({ action: 'list' });
+}
 function gasPost(data) {
-  return fetch(GAS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify(data)
-  })
-  .then(function() {
-    // no-cors는 응답 본문을 읽을 수 없음 → ok:true로 간주
-    return { ok: true };
-  })
-  .catch(function(e) {
-    console.error('GAS POST error', e);
-    return { ok: false, error: e.message };
-  });
+  var params = { action: data.action };
+  if (data.student) params.data = data.student;
+  else if (data.students) params.data = data.students;
+  else if (data.id) params.id = data.id;
+  return gasJsonp(params);
 }
 
 function loadStudents() {
@@ -350,7 +350,7 @@ function persistAll(list) {
 }
 
 function gasDelete(id) {
-  return gasPost({ action: 'delete', id: id });
+  return gasJsonp({ action: 'delete', id: id });
 }
 
 function markDirty(){isDirty=true;document.getElementById('editing-badge').style.display='';}
