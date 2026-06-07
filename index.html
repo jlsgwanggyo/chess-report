@@ -956,61 +956,100 @@ function generateAnalysis(s) {
     });
   });
 
-  // 종합 의견
+  // ── 종합 총평 생성 ─────────────────────────────────────────────
+  // 설계 원칙:
+  // 1. 숫자/퍼센트 없음 — 학부모에게 불필요한 정보 제거
+  // 2. 강점→약점 자연스럽게 연결 — 영역 간 흐름 유지
+  // 3. 오답분석 반복 금지 — 상담 선생님 말투로 재구성
+  // 4. 마무리는 항상 격려와 방향 제시
+
   var scored = areaStats.filter(function(a){ return a.correctPts != null; });
   var totalScore = scored.reduce(function(t,a){ return t + a.correctPts; }, 0);
   var totalMax = scored.reduce(function(t,a){ return t + a.max; }, 0);
   var totalPct = totalMax > 0 ? Math.round(totalScore / totalMax * 100) : null;
   var strong = areaStats.filter(function(a){ return a.pct != null && a.pct >= 85; });
-  var weak = areaStats.filter(function(a){ return a.pct != null && a.pct < 65; });
+  var weak   = areaStats.filter(function(a){ return a.pct != null && a.pct < 65; });
+  var mid    = areaStats.filter(function(a){ return a.pct != null && a.pct >= 65 && a.pct < 85; });
 
-  var overall = '';
-
-  // 전체 성취도 문장
+  // ① 전체 인상 — 숫자 없이 문장으로
+  var opening = '';
   if (totalPct != null) {
-    if (totalPct >= 85) overall = '시험 전체에서 ' + totalPct + '%의 높은 성취율을 기록했어요. 이 레벨의 학습 내용을 충분히 소화한 것으로 보이며, 수업에서도 안정적으로 적응할 수 있을 것 같아요. ';
-    else if (totalPct >= 70) overall = '시험 전체적으로 ' + totalPct + '%의 양호한 성취를 보였어요. 기본기는 잘 갖춰져 있고, 몇 가지 부분만 보완하면 더욱 탄탄한 영어 실력을 쌓을 수 있어요. ';
-    else if (totalPct >= 50) overall = '기본적인 내용은 이해하고 있지만(' + totalPct + '%), 일부 영역에서 추가 연습이 필요해요. 꾸준히 보완하면 실력이 빠르게 좋아질 거예요. ';
-    else overall = '배정된 레벨에서 전반적으로 보완이 필요한 수준이에요(' + totalPct + '%). 기초부터 차근차근 다지면서 수업에 적응해 나가는 것이 좋을 것 같아요. ';
+    if (totalPct >= 85)      opening = '이번 시험에서 전반적으로 뛰어난 실력을 보여주었어요.';
+    else if (totalPct >= 70) opening = '이번 시험에서 전반적으로 안정적인 실력을 보여주었어요.';
+    else if (totalPct >= 50) opening = '이번 시험에서 기본적인 영어 이해력은 갖추고 있는 것으로 확인됐어요.';
+    else                     opening = '이번 시험 결과를 보면, 아직 이 레벨의 학습 내용에 적응이 더 필요한 상태예요.';
   }
 
-  // 강점 영역
+  // ② 강점 문장 — 있을 때만, 자연스럽게
+  var strengthSentence = '';
   if (strong.length > 0) {
-    var strongNames = strong.map(function(a){ return a.name.split(' ')[0]; }).join(', ');
-    overall += strongNames + ' 영역은 강점으로, 수업에서 자신감 있게 참여할 수 있는 기반이 될 거예요. ';
-  }
-
-  // 취약 영역 - 구체적 설명
-  if (weak.length > 0) {
-    var weakDetails = [];
-    weak.forEach(function(a){
-      var topSkill = a.skillList && a.skillList[0] ? a.skillList[0].skill : null;
-      var topMsg = a.msgs && a.msgs[0] ? a.msgs[0].msg : null;
-      if (topMsg) weakDetails.push(topMsg);
-      else if (topSkill) weakDetails.push(a.name.split(' ')[0] + ' 영역의 ' + topSkill + ' 능력이 부족해요');
+    var sNames = strong.map(function(a){
+      if (a.name.indexOf('Listen') >= 0) return '듣기';
+      if (a.name.indexOf('Read')   >= 0) return '읽기';
+      if (a.name.indexOf('Vocab')  >= 0) return '어휘';
+      if (a.name.indexOf('Grammar')>= 0) return '문법';
+      if (a.name.indexOf('Phonics')>= 0) return '파닉스';
+      return a.name.split(' ')[0];
     });
-    if (weakDetails.length) {
-      overall += '특히 ' + weakDetails[0];
-      if (weakDetails[1]) overall += ' 또한 ' + weakDetails[1];
-    }
-  }
-
-  if (!overall.trim()) overall = '오답 문항을 중심으로 영역별 보완 학습을 진행하면 더 좋은 결과가 있을 거예요.';
-
-  // 배정 레벨 의미 + 학습 방향 마무리 문장 추가 (중복 없이)
-  var closingMsg = '';
-  if (totalPct != null) {
-    if (totalPct >= 85) {
-      closingMsg = '배정된 레벨에서 충분한 준비가 되어 있으며, 수업 초반부터 자신 있게 참여할 수 있을 것으로 기대됩니다.';
-    } else if (totalPct >= 70) {
-      closingMsg = '배정 레벨에서 안정적으로 적응할 수 있는 수준이며, 초반에 취약 영역을 함께 보완하면 빠르게 실력을 끌어올릴 수 있어요.';
-    } else if (totalPct >= 50) {
-      closingMsg = '배정 레벨에서 보완 학습을 병행하면 수업 적응이 한층 수월해질 거예요. 선생님과 함께 꾸준히 나아가면 분명히 좋아집니다.';
+    if (sNames.length === 1) {
+      strengthSentence = '특히 ' + sNames[0] + ' 능력이 잘 갖춰져 있어, 수업에서 자신감 있게 시작할 수 있을 거예요.';
     } else {
-      closingMsg = '기초부터 차근차근 다질 수 있도록 수업 내에서 집중 지도가 이루어질 예정이에요. 함께 성장해 나갈 것을 기대합니다.';
+      var lastS = sNames.pop();
+      strengthSentence = '특히 ' + sNames.join(', ') + ', ' + lastS + ' 능력이 잘 갖춰져 있어, 수업에서 자신감 있게 시작할 수 있을 거예요.';
     }
-    overall = overall.trim() + ' ' + closingMsg;
   }
+
+  // ③ 보완 문장 — 약점을 구체적으로, 하지만 격려 톤으로
+  // 오답분석의 세부 문장을 그대로 쓰지 않고 영역 단위로 재구성
+  var weakSentence = '';
+  if (weak.length > 0) {
+    var wNames = weak.map(function(a){
+      if (a.name.indexOf('Listen') >= 0) return '듣기';
+      if (a.name.indexOf('Read')   >= 0) return '읽기';
+      if (a.name.indexOf('Vocab')  >= 0) return '어휘';
+      if (a.name.indexOf('Grammar')>= 0) return '문법';
+      if (a.name.indexOf('Phonics')>= 0) return '파닉스';
+      return a.name.split(' ')[0];
+    });
+
+    // 약점 영역의 핵심 패턴 한 가지만 추출 (오답분석 반복 금지)
+    var keyPattern = '';
+    var firstWeak = weak[0];
+    if (firstWeak.patterns && firstWeak.patterns.length > 0) {
+      keyPattern = firstWeak.patterns[0];
+    }
+
+    if (wNames.length === 1) {
+      weakSentence = '다만 ' + wNames[0] + ' 영역은 좀 더 집중적인 연습이 필요해요.';
+    } else {
+      var lastW = wNames.pop();
+      weakSentence = '다만 ' + wNames.join(', ') + ', ' + lastW + ' 영역은 좀 더 집중적인 연습이 필요해요.';
+    }
+    if (keyPattern) {
+      weakSentence += ' 수업에서는 ' + keyPattern + '.';
+    }
+  } else if (mid.length > 0 && strong.length === 0) {
+    weakSentence = '전체적으로 고른 실력을 갖추고 있으며, 조금씩 다듬어 나가면 더욱 탄탄해질 거예요.';
+  }
+
+  // ④ 마무리 — 배정 레벨과 연결, 격려
+  var closing = '';
+  if (weak.length === 0 && strong.length > 0) {
+    closing = '배정된 수업에서 잘 적응하며 실력을 더욱 키워나갈 수 있을 것으로 기대됩니다.';
+  } else if (totalPct != null && totalPct >= 70) {
+    closing = '배정된 수업에서 선생님과 함께 부족한 부분을 채워가면 빠르게 성장할 수 있을 거예요.';
+  } else {
+    closing = '수업을 통해 차근차근 실력을 쌓아가면 분명히 좋아질 거예요. 함께 응원하겠습니다.';
+  }
+
+  // 문장 조합 — 자연스러운 흐름으로
+  var parts = [opening];
+  if (strengthSentence) parts.push(strengthSentence);
+  if (weakSentence)     parts.push(weakSentence);
+  parts.push(closing);
+
+  var overall = parts.filter(Boolean).join(' ');
+  if (!overall.trim()) overall = '수업을 통해 함께 실력을 키워나갈 수 있도록 최선을 다하겠습니다.';
 
   return { areas: areaStats, overall: overall.trim() };
 }
@@ -1064,7 +1103,7 @@ function buildReportHtml(s,analysis){
         +(a.comment?'<div class="ac-comment">'+a.comment+'</div>':'')
         +'</div></div>';
     }).join('');
-    analysisHtml='<div class="ac-grid">'+cards+'</div><div class="overall-box"><span class="overall-icon">💡</span><div class="overall-text"><strong>📋 학습 역량 진단 총평</strong>'+analysis.overall+'</div></div>';
+    analysisHtml='<div class="ac-grid">'+cards+'</div><div class="overall-box"><span class="overall-icon">💡</span><div class="overall-text"><strong>종합 학습 의견</strong>'+analysis.overall+'</div></div>';
   }
 
   var rmHtml='';
