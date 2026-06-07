@@ -376,7 +376,19 @@ function getChecked(){return students.filter(function(s){var el=document.getElem
 // ── 학생 CRUD ──────────────────────────────────────────────────
 function newStudent(){if(isDirty&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;currentId='s_'+Date.now();isDirty=false;renderForm({id:currentId});setTimeout(function(){var el=document.getElementById('f-name');if(el)el.focus();},50);}
 function selectStudent(id){if(isDirty&&currentId!==id&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;currentId=id;isDirty=false;renderForm(students.find(function(x){return x.id===id;})||{id:id});renderSidebar();}
-function saveStudent(){var s=collectForm();if(!s){showToast('학생명을 입력해 주세요.');return;}s.updatedAt=Date.now();var ex=students.find(function(x){return x.id===currentId;});if(ex)Object.assign(ex,s);else students.unshift(s);newStudents.push(s);isDirty=false;document.getElementById('editing-badge').style.display='none';document.getElementById('btn-del').style.display='flex';renderSidebar();showToast('저장됐어요!');}
+function saveStudent(){
+  var s=collectForm();
+  if(!s){showToast('학생명을 입력해 주세요.');return;}
+  s.updatedAt=Date.now();
+  var ex=students.find(function(x){return x.id===currentId;});
+  if(ex)Object.assign(ex,s);else students.unshift(s);
+  isDirty=false;
+  document.getElementById('editing-badge').style.display='none';
+  document.getElementById('btn-del').style.display='flex';
+  renderSidebar();
+  // 구글 시트에 저장
+  persist(s);
+}
 function deleteStudent(){
   if(!currentId||!confirm('삭제할까요?'))return;
   var delId=currentId;
