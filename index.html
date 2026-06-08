@@ -254,6 +254,22 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
 .pg-break{page-break-after:always;height:1px;}
 
 
+/* ── 폴더 토글 ── */
+.folder-wrap{margin-bottom:4px;}
+.folder-hd{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;border-radius:6px;transition:background .15s;}
+.folder-hd:hover{background:rgba(255,255,255,.08);}
+.folder-chevron{font-size:9px;color:rgba(255,255,255,.5);transition:transform .2s;display:inline-block;flex-shrink:0;}
+.folder-chevron.open{transform:rotate(90deg);}
+.folder-body{display:none;padding-left:4px;}
+.folder-body.open{display:block;}
+.folder-acts{margin-left:auto;display:flex;gap:3px;}
+.folder-act{background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.5);border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.folder-act:hover{background:rgba(255,255,255,.18);color:#fff;}
+.folder-act.del:hover{background:rgba(220,38,38,.4);color:#fff;}
+.drop-target{min-height:10px;border-radius:6px;transition:background .15s;}
+.drop-target.drag-over{background:rgba(96,165,250,.15);outline:2px dashed rgba(96,165,250,.4);}
+.student-item.dragging{opacity:.4;}
+
 @media print{
   .print-toolbar{display:none!important;}
   .print-cards{padding:0!important;max-width:100%!important;}
@@ -626,8 +642,8 @@ function renderSidebar() {
       + '<div class="folder-hd" data-fid="' + f.id + '">'
         + '<span class="folder-chevron' + (isOpen ? ' open' : '') + '">&#9654;</span>'
         + '<span style="font-size:13px">&#128193;</span>'
-        + '<span class="folder-label">' + f.name + '</span>'
-        + '<span class="folder-cnt">' + fStu.length + '&#47679;</span>'
+        + '<span class="folder-label" style="color:#93c5fd;font-weight:700;">' + f.name + '</span>'
+        + '<span class="folder-cnt" style="color:#93c5fd;">&nbsp;&nbsp;[' + fStu.length + '명]</span>'
         + '<div class="folder-acts">'
           + '<button class="folder-act" data-fid="' + f.id + '" title="이름 변경">&#9998;</button>'
           + '<button class="folder-act del" data-fid="' + f.id + '" title="삭제">&#10005;</button>'
@@ -652,8 +668,8 @@ function renderSidebar() {
       + '<div class="folder-hd" data-fid="__unc__">'
         + '<span class="folder-chevron' + (uncOpen ? ' open' : '') + '">&#9654;</span>'
         + '<span style="font-size:13px">&#128203;</span>'
-        + '<span class="folder-label">미분류</span>'
-        + '<span class="folder-cnt">' + uncat.length + '&#47679;</span>'
+        + '<span class="folder-label" style="color:#93c5fd;font-weight:700;">미분류</span>'
+        + '<span class="folder-cnt" style="color:#93c5fd;">&nbsp;&nbsp;[' + uncat.length + '명]</span>'
       + '</div>'
       + '<div class="folder-body' + (uncOpen ? ' open' : '') + '">'
         + '<div class="drop-target" data-fid="__none__">' + uncBody + '</div>'
