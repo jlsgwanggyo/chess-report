@@ -788,9 +788,9 @@ function buildWrongFields(cfg, wrongs) {
   return html;
 }
 
-function buildAvgFields(cfg, avgs) {
+function buildAvgFields(cfg, avgs, avgMode) {
   avgs = avgs || {};
-  if (!cfg) return '';
+  avgMode = avgMode || 'score'; // 'score' or 'pct'
   var h = '';
   for (var n = 1; n <= 4; n++) {
     var k = 'a' + n;
@@ -798,15 +798,82 @@ function buildAvgFields(cfg, avgs) {
     for (var i = 0; i < cfg.areas.length; i++) {
       if (cfg.areas[i].n === n) { area = cfg.areas[i]; break; }
     }
-    var av = avgs[k] !== undefined ? avgs[k] : '';
     if (area) {
-      h += '<div class="fg"><label>영역' + n + ' 평균 · ' + area.name + '</label>'
-        + '<input type="number" id="av-' + k + '" value="' + av + '" placeholder="평균 점수" oninput="markDirty()"></div>';
+      var av = avgs[k] !== undefined ? avgs[k] : '';
+      // 퍼센티지 모드면 저장된 점수를 % 로 역산해서 보여줌
+      var displayVal = '';
+      if (av !== '') {
+        displayVal = avgMode === 'pct'
+          ? Math.round(av / area.max * 1000) / 10
+          : av;
+      }
+      if (avgMode === 'score') {
+        h += '<div class="fg"><label>영역' + n + ' 평균 · ' + area.name + '<span style="color:var(--gray-400);font-weight:400;margin-left:4px">/ ' + area.max + '점</span></label>'
+          + '<input type="number" id="av-' + k + '" value="' + displayVal + '" placeholder="0~' + area.max + '" min="0" max="' + area.max + '" oninput="limitAvgInput(this,' + area.max + ');markDirty()"></div>';
+      } else {
+        h += '<div class="fg"><label>영역' + n + ' 평균 · ' + area.name + '<span style="color:var(--gray-400);font-weight:400;margin-left:4px">→ ' + area.max + '점 기준</span></label>'
+          + '<div style="position:relative">'
+          + '<input type="number" id="av-' + k + '" value="' + displayVal + '" placeholder="0~100" min="0" max="100" step="0.1" oninput="limitAvgInput(this,100);updatePctHint(\'' + k + '\',' + area.max + ');markDirty()" style="padding-right:56px">'
+          + '<span id="pct-hint-' + k + '" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--gray-400);pointer-events:none">'
+          + (displayVal !== '' ? '≈' + Math.round(parseFloat(displayVal) / 100 * area.max * 10) / 10 + '점' : '') + '</span>'
+          + '</div></div>';
+      }
     } else {
       h += '<div class="fg fg-disabled"><label>영역' + n + ' 평균</label><input type="number" disabled placeholder="—"></div>';
     }
   }
   return h;
+}
+
+function updatePctHint(k, max) {
+  var el = document.getElementById('av-' + k);
+  var hint = document.getElementById('pct-hint-' + k);
+  if (!el || !hint) return;
+  var v = parseFloat(el.value);
+  hint.textContent = isNaN(v) ? '' : '≈' + Math.round(v / 100 * max * 10) / 10 + '점';
+}
+
+function switchAvgMode(mode) {
+  var lv = document.getElementById('f-level') && document.getElementById('f-level').value;
+  var cfg = window.LEVEL_CFG && window.LEVEL_CFG[lv];
+  if (!cfg) return;
+  // 현재 입력값을 점수로 변환해서 보존
+  var avgs = collectAvgs(cfg, document.getElementById('avg-mode-current') && document.getElementById('avg-mode-current').value || 'score');
+  // 모드 버튼 UI 업데이트
+  document.getElementById('avg-mode-current').value = mode;
+  ['avg-btn-score','avg-btn-pct'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    var active = (id === 'avg-btn-score' && mode === 'score') || (id === 'avg-btn-pct' && mode === 'pct');
+    btn.style.background = active ? 'var(--navy)' : 'var(--gray-100)';
+    btn.style.color = active ? '#fff' : 'var(--gray-700)';
+    btn.style.borderColor = active ? 'var(--navy)' : 'var(--gray-300)';
+  });
+  // 필드 재렌더
+  var af = document.getElementById('avg-fields');
+  if (af) af.innerHTML = buildAvgFields(cfg, avgs, mode);
+  markDirty();
+}
+
+function collectAvgs(cfg, currentMode) {
+  // 현재 모드에 맞게 입력값을 실제 점수로 변환해 반환
+  var avgs = {};
+  currentMode = currentMode || 'score';
+  cfg.areas.forEach(function(a) {
+    var el = document.getElementById('av-' + a.key);
+    if (!el || el.value === '') return;
+    var v = parseFloat(el.value);
+    if (isNaN(v)) return;
+    avgs[a.key] = currentMode === 'pct' ? Math.round(v / 100 * a.max * 10) / 10 : v;
+  });
+  return avgs;
+}
+
+function limitAvgInput(el, max) {
+  var v = parseFloat(el.value);
+  if (isNaN(v)) return;
+  if (v < 0) el.value = 0;
+  if (v > max) { el.value = max; showToast('최대 ' + max + (max === 100 ? '%' : '점') + '까지 입력할 수 있어요.'); }
 }
 
 function toggleAvg() {
@@ -959,7 +1026,7 @@ function renderForm(s){
     +'<div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">단계</th><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">레벨</th><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">맞은 문항</th><th style="background:#2d7a4f;color:#c8f0da;padding:6px 8px;font-weight:600;text-align:center">성취율</th></tr></thead><tbody>'+ptRows+'</tbody></table></div></div></div></div>'
     +'<div class="form-section" id="score-section"><div class="fs-title"><i class="ti ti-chart-bar"></i>영역별 점수'+cfgLbl+'</div><div class="form-grid" id="score-fields">'+buildScoreFields(cfg,s.scores||{})+'</div>'
     +'<div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding-top:8px;border-top:0.5px dashed var(--color-border-primary)"><label class="toggle-wrap"><input type="checkbox" id="chk-avg"'+(showAvg?' checked':'')+' onchange="toggleAvg()"><span class="toggle-track"></span></label><span style="font-size:12px;color:var(--color-text-secondary)">평균 비교 표시</span></div>'
-    +'<div class="avg-section'+(showAvg?' visible':'')+'" id="avg-section"><div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:5px;margin-top:7px">평균 점수 입력</div><div class="form-grid" id="avg-fields">'+buildAvgFields(cfg,s.avgs||{})+'</div></div></div>'
+    +'<div class="avg-section'+(showAvg?' visible':'')+'" id="avg-section"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:7px"><span style="font-size:10px;color:var(--color-text-secondary);font-weight:600">평균 입력 방식</span><input type="hidden" id="avg-mode-current" value="score"><button type="button" id="avg-btn-score" onclick="switchAvgMode(\'score\')" style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer;font-family:var(--font-sans)">점수 입력</button><button type="button" id="avg-btn-pct" onclick="switchAvgMode(\'pct\')" style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--gray-300);background:var(--gray-100);color:var(--gray-700);cursor:pointer;font-family:var(--font-sans)">% 입력</button></div><div class="form-grid" id="avg-fields">'+buildAvgFields(cfg,s.avgs||{})+'</div></div></div>'
     +'<div class="form-section"><div class="fs-title"><i class="ti ti-x"></i>오답 문항 <span style="font-size:10px;font-weight:400;color:var(--color-text-secondary);margin-left:3px">클릭=오답 / 다시 클릭=취소 · 입력 점수 초과 시 추가 차단</span></div><div id="wrong-fields">'+buildWrongFields(cfg,wrongs)+'</div></div>'
     +'<div class="form-section"><div class="fs-title"><i class="ti ti-building"></i>예상 반 정보</div><div class="form-grid">'
     +'<div class="fg"><label>예상 반명</label><input id="f-class" value="'+(s.className||'')+'" placeholder="45-LB1-5A" oninput="markDirty()"></div>'
@@ -1015,7 +1082,8 @@ function collectForm(){
   var nameEl=document.getElementById('f-name'),name=nameEl?nameEl.value.trim():'';if(!name)return null;
   var lv=document.getElementById('f-level')&&document.getElementById('f-level').value,cfg=LEVEL_CFG[lv];
   var scores={},avgs={};
-  for(var n=1;n<=4;n++){var k='a'+n;var sv=document.getElementById('sc-'+k)&&document.getElementById('sc-'+k).value;var av=document.getElementById('av-'+k)&&document.getElementById('av-'+k).value;if(sv!==''&&sv!=null&&!isNaN(sv))scores[k]=parseFloat(sv);if(av!==''&&av!=null&&!isNaN(av))avgs[k]=parseFloat(av);}
+  var avgMode = document.getElementById('avg-mode-current') ? document.getElementById('avg-mode-current').value : 'score';
+  for(var n=1;n<=4;n++){var k='a'+n;var sv=document.getElementById('sc-'+k)&&document.getElementById('sc-'+k).value;var av=document.getElementById('av-'+k)&&document.getElementById('av-'+k).value;if(sv!==''&&sv!=null&&!isNaN(sv))scores[k]=parseFloat(sv);if(av!==''&&av!=null&&!isNaN(av)){var area=cfg&&cfg.areas.find(function(a){return a.key===k;});avgs[k]=avgMode==='pct'&&area?Math.round(parseFloat(av)/100*area.max*10)/10:parseFloat(av);}}
   var wrongSet=[];if(cfg)cfg.areas.forEach(function(area){area.qs.forEach(function(q){var btn=document.getElementById('wq-'+currentId+'-'+q);if(btn&&btn.classList.contains('wrong'))wrongSet.push(q);});});
   var pretest={};[1,2,3].forEach(function(step){var lv2=document.getElementById('pt-lv-'+step),sc2=document.getElementById('pt-sc-'+step);pretest[step]={level:lv2?lv2.value:'',score:sc2&&sc2.value!==''?parseInt(sc2.value):null};});
   var histEl=document.getElementById('f-history'),learningHistory=histEl&&histEl.value!==''?parseInt(histEl.value):null;
