@@ -412,27 +412,217 @@ function persistAll(list){
 }
 
 // ── 사이드바 ────────────────────────────────────────────────
-function renderSidebar(){
-  document.getElementById('total-count').textContent=students.length?'('+students.length+'명)':'';
-  var list=document.getElementById('student-list');
-  if(!students.length){
-    list.innerHTML='<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">등록된 학생이 없어요</div>';
+
+var folders = [];
+var _dragId = null;
+
+function loadFolders() {
+  try {
+    var raw = localStorage.getItem('chess_folders');
+    folders = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(folders)) folders = [];
+  } catch(e) { folders = []; }
+}
+
+function saveFolders() {
+  try { localStorage.setItem('chess_folders', JSON.stringify(folders)); } catch(e) {}
+}
+
+function addFolder() {
+  var name = prompt('새 폴더 이름을 입력하세요\n예) 2026년 6월 학기', '');
+  if (!name || !name.trim()) return;
+  folders.push({ id: 'f_' + Date.now(), name: name.trim(), open: true });
+  saveFolders();
+  renderSidebar();
+}
+
+function renameFolder(id) {
+  var f = folders.find(function(x){ return x.id === id; });
+  if (!f) return;
+  var name = prompt('폴더 이름 변경', f.name);
+  if (!name || !name.trim()) return;
+  f.name = name.trim();
+  saveFolders();
+  renderSidebar();
+}
+
+function deleteFolder(id) {
+  var f = folders.find(function(x){ return x.id === id; });
+  if (!f) return;
+  var cnt = students.filter(function(s){ return s.folder === id; }).length;
+  var msg = cnt > 0
+    ? '폴더 안에 학생 ' + cnt + '명이 있어요.\n삭제하면 미분류로 이동해요. 계속할까요?'
+    : '폴더를 삭제할까요?';
+  if (!confirm(msg)) return;
+  students.forEach(function(s){
+    if (s.folder === id) { s.folder = ''; gasPost({ action: 'save', student: s }); }
+  });
+  folders = folders.filter(function(x){ return x.id !== id; });
+  saveFolders();
+  renderSidebar();
+}
+
+function toggleFolderOpen(id) {
+  if (id === '__unc__') {
+    window._uncOpen = window._uncOpen === false ? true : false;
+    renderSidebar();
     return;
   }
-  list.innerHTML=students.map(function(s){
-    return '<div class="student-item'+(s.id===currentId?' active':'')+'"'
-      +' id="si-'+s.id+'"'
-      +' data-name="'+(s.name||'').toLowerCase()+'"'
-      +' data-code="'+(s.memberCode||'').toLowerCase()+'">'
-      +'<input type="checkbox" class="student-cb" id="cb-'+s.id+'" onchange="onCbChange()" onclick="event.stopPropagation()">'
-      +'<div class="student-info" onclick="selectStudent(\''+s.id+'\')">'
-        +'<div class="student-name">'+(s.name||'이름 없음')
-          +(s.memberCode?'<span style="font-size:9px;color:rgba(255,255,255,.35);margin-left:4px">'+s.memberCode+'</span>':'')
-        +'</div>'
-        +'<div class="student-meta">'+(s.testLevel||'—')+' · '+(s.grade?'초등'+s.grade+'학년':'학년미정')+'</div>'
-      +'</div>'
-    +'</div>';
-  }).join('');
+  var f = folders.find(function(x){ return x.id === id; });
+  if (f) { f.open = !f.open; saveFolders(); }
+  renderSidebar();
+}
+
+function moveToFolder(sid, fid) {
+  var s = students.find(function(x){ return x.id === sid; });
+  if (!s) return;
+  s.folder = fid;
+  s.updatedAt = Date.now();
+  persist(s);
+  renderSidebar();
+  showToast('폴더로 이동했어요!');
+}
+
+function attachSidebarDelegation() {
+  var list = document.getElementById('student-list');
+  if (!list || list._del) return;
+  list._del = true;
+
+  list.addEventListener('click', function(e) {
+    if (e.target.classList.contains('student-cb')) { onCbChange(); return; }
+    var info = e.target.closest('.student-info');
+    if (info) { selectStudent(info.getAttribute('data-sid')); return; }
+    var hd = e.target.closest('.folder-hd');
+    if (hd) {
+      var act = e.target.closest('.folder-act');
+      if (act) {
+        e.stopPropagation();
+        var fid = act.getAttribute('data-fid');
+        if (act.classList.contains('del')) deleteFolder(fid);
+        else renameFolder(fid);
+        return;
+      }
+      toggleFolderOpen(hd.getAttribute('data-fid'));
+      return;
+    }
+  });
+
+  list.addEventListener('dragstart', function(e) {
+    var item = e.target.closest('[data-sid]');
+    if (!item) return;
+    _dragId = item.getAttribute('data-sid');
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(function(){ item.classList.add('dragging'); }, 0);
+  });
+  list.addEventListener('dragend', function() {
+    _dragId = null;
+    list.querySelectorAll('.student-item').forEach(function(el){ el.classList.remove('dragging'); });
+    list.querySelectorAll('.drop-target').forEach(function(el){ el.classList.remove('drag-over'); });
+  });
+  list.addEventListener('dragover', function(e) {
+    var zone = e.target.closest('.drop-target');
+    if (!zone || !_dragId) return;
+    e.preventDefault();
+    list.querySelectorAll('.drop-target').forEach(function(el){ el.classList.remove('drag-over'); });
+    zone.classList.add('drag-over');
+  });
+  list.addEventListener('dragleave', function(e) {
+    var zone = e.target.closest('.drop-target');
+    if (zone) zone.classList.remove('drag-over');
+  });
+  list.addEventListener('drop', function(e) {
+    var zone = e.target.closest('.drop-target');
+    if (!zone || !_dragId) return;
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    var fid = zone.getAttribute('data-fid');
+    moveToFolder(_dragId, fid === '__none__' ? '' : fid);
+    _dragId = null;
+  });
+
+  var addBtn = document.getElementById('btn-add-folder');
+  if (addBtn && !addBtn._evt) {
+    addBtn._evt = true;
+    addBtn.addEventListener('click', addFolder);
+  }
+}
+
+function renderSidebar() {
+  document.getElementById('total-count').textContent = students.length ? '(' + students.length + '명)' : '';
+  var list = document.getElementById('student-list');
+  var qEl = document.getElementById('search-input');
+  var q = qEl ? qEl.value.trim().toLowerCase() : '';
+  var html = '';
+
+  function mkItem(s) {
+    var match = !q || (s.name||'').toLowerCase().indexOf(q) >= 0 || (s.memberCode||'').toLowerCase().indexOf(q) >= 0;
+    if (!match) return '';
+    var active = s.id === currentId ? ' active' : '';
+    return '<div class="student-item' + active + '" id="si-' + s.id + '" data-sid="' + s.id + '" draggable="true">'
+      + '<input type="checkbox" class="student-cb" id="cb-' + s.id + '">'
+      + '<div class="student-info" data-sid="' + s.id + '">'
+        + '<div class="student-name">' + (s.name || '이름 없음')
+          + (s.memberCode ? '<span style="font-size:9px;color:rgba(255,255,255,.35);margin-left:4px">' + s.memberCode + '</span>' : '')
+        + '</div>'
+        + '<div class="student-meta">' + (s.testLevel || '—') + ' · ' + (s.grade ? '초등' + s.grade + '학년' : '학년미정') + '</div>'
+      + '</div>'
+    + '</div>';
+  }
+
+  folders.forEach(function(f) {
+    var fStu = students.filter(function(s){ return s.folder === f.id; });
+    var vis = fStu.filter(function(s){
+      return !q || (s.name||'').toLowerCase().indexOf(q) >= 0 || (s.memberCode||'').toLowerCase().indexOf(q) >= 0;
+    });
+    if (q && vis.length === 0) return;
+    var isOpen = f.open !== false;
+    var body = vis.length === 0 && !q
+      ? '<div style="padding:8px;font-size:10px;color:rgba(255,255,255,.2);text-align:center">드래그로 학생 추가</div>'
+      : vis.map(mkItem).join('');
+    html += '<div class="folder-wrap">'
+      + '<div class="folder-hd" data-fid="' + f.id + '">'
+        + '<span class="folder-chevron' + (isOpen ? ' open' : '') + '">&#9654;</span>'
+        + '<span style="font-size:13px">&#128193;</span>'
+        + '<span class="folder-label">' + f.name + '</span>'
+        + '<span class="folder-cnt">' + fStu.length + '&#47679;</span>'
+        + '<div class="folder-acts">'
+          + '<button class="folder-act" data-fid="' + f.id + '" title="이름 변경">&#9998;</button>'
+          + '<button class="folder-act del" data-fid="' + f.id + '" title="삭제">&#10005;</button>'
+        + '</div>'
+      + '</div>'
+      + '<div class="folder-body' + (isOpen ? ' open' : '') + '">'
+        + '<div class="drop-target" data-fid="' + f.id + '">' + body + '</div>'
+      + '</div>'
+    + '</div>';
+  });
+
+  var uncOpen = window._uncOpen !== false;
+  var uncat = students.filter(function(s){ return !s.folder || s.folder === ''; });
+  var uncVis = uncat.filter(function(s){
+    return !q || (s.name||'').toLowerCase().indexOf(q) >= 0 || (s.memberCode||'').toLowerCase().indexOf(q) >= 0;
+  });
+  if (!q || uncVis.length > 0) {
+    var uncBody = uncVis.length === 0
+      ? '<div style="padding:8px;font-size:10px;color:rgba(255,255,255,.2);text-align:center">드래그로 이동</div>'
+      : uncVis.map(mkItem).join('');
+    html += '<div class="folder-wrap">'
+      + '<div class="folder-hd" data-fid="__unc__">'
+        + '<span class="folder-chevron' + (uncOpen ? ' open' : '') + '">&#9654;</span>'
+        + '<span style="font-size:13px">&#128203;</span>'
+        + '<span class="folder-label">&#48120;&#48516;&#47448;</span>'
+        + '<span class="folder-cnt">' + uncat.length + '&#47679;</span>'
+      + '</div>'
+      + '<div class="folder-body' + (uncOpen ? ' open' : '') + '">'
+        + '<div class="drop-target" data-fid="__none__">' + uncBody + '</div>'
+      + '</div>'
+    + '</div>';
+  }
+
+  if (!html && !students.length) {
+    html = '<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">&#46321;&#47197;&#46108; &#54617;&#49373;&#51060; &#50630;&#50612;&#50836;</div>';
+  }
+  list.innerHTML = html || '<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">&#44160;&#49353; &#44208;&#44284; &#50630;&#51020;</div>';
+  attachSidebarDelegation();
 }
 
 function filterStudents(){
