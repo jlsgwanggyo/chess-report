@@ -515,6 +515,178 @@ function deleteStudent(){
 function markDirty(){isDirty=true;document.getElementById('editing-badge').style.display='';}
 
 
+
+// ── renderForm 헬퍼 함수들 ─────────────────────────────────────
+
+function buildScoreFields(cfg, scores) {
+  scores = scores || {};
+  if (!cfg) return '';
+  var h = '';
+  for (var n = 1; n <= 4; n++) {
+    var k = 'a' + n;
+    var area = null;
+    for (var i = 0; i < cfg.areas.length; i++) {
+      if (cfg.areas[i].n === n) { area = cfg.areas[i]; break; }
+    }
+    var val = scores[k] !== undefined ? scores[k] : '';
+    if (area) {
+      h += '<div class="fg"><label>영역' + n + ' · ' + area.name + '</label>'
+        + '<input type="number" id="sc-' + k + '" min="0" max="' + area.max + '" value="' + val + '" placeholder="0~' + area.max + '" oninput="markDirty()">'
+        + '<div class="score-hint">배점 ' + area.max + '점</div></div>';
+    } else {
+      h += '<div class="fg fg-disabled"><label>영역' + n + '</label><input type="number" disabled placeholder="해당 없음"></div>';
+    }
+  }
+  return h;
+}
+
+function buildWrongFields(cfg, wrongs) {
+  wrongs = wrongs || [];
+  if (!cfg) return '<div style="font-size:12px;color:var(--gray-500)">시험지 레벨을 먼저 선택해 주세요.</div>';
+  var id = currentId || 'tmp';
+  return cfg.areas.map(function(area) {
+    var clr = area.color || '#2b6cb0';
+    var btns = area.qs.map(function(q) {
+      var isW = wrongs.indexOf(q) >= 0;
+      return '<button class="wq-btn' + (isW ? ' wrong' : '') + '" id="wq-' + id + '-' + q + '" onclick="toggleWrong('' + area.key + '',' + q + ')">' + q + '</button>';
+    }).join('');
+    return '<div style="margin-bottom:7px"><span class="area-badge" style="background:' + clr + '22;color:' + clr + ';border:0.5px solid ' + clr + '44">' + area.name + '</span><div class="wrong-grid">' + btns + '</div></div>';
+  }).join('');
+}
+
+function buildAvgFields(cfg, avgs) {
+  avgs = avgs || {};
+  if (!cfg) return '';
+  var h = '';
+  for (var n = 1; n <= 4; n++) {
+    var k = 'a' + n;
+    var area = null;
+    for (var i = 0; i < cfg.areas.length; i++) {
+      if (cfg.areas[i].n === n) { area = cfg.areas[i]; break; }
+    }
+    var av = avgs[k] !== undefined ? avgs[k] : '';
+    if (area) {
+      h += '<div class="fg"><label>영역' + n + ' 평균 · ' + area.name + '</label>'
+        + '<input type="number" id="av-' + k + '" value="' + av + '" placeholder="평균 점수" oninput="markDirty()"></div>';
+    } else {
+      h += '<div class="fg fg-disabled"><label>영역' + n + ' 평균</label><input type="number" disabled placeholder="—"></div>';
+    }
+  }
+  return h;
+}
+
+function toggleAvg() {
+  markDirty();
+  var show = document.getElementById('chk-avg') && document.getElementById('chk-avg').checked;
+  var sec = document.getElementById('avg-section');
+  if (sec) sec.classList.toggle('visible', !!show);
+}
+
+function togglePretest() {
+  markDirty();
+  var show = document.getElementById('chk-pretest') && document.getElementById('chk-pretest').checked;
+  var body = document.getElementById('pretest-body');
+  if (body) body.classList.toggle('visible', !!show);
+}
+
+function updatePretestBar(step) {
+  var sc = document.getElementById('pt-sc-' + step);
+  var bar = document.getElementById('pt-bar-' + step);
+  var pct = document.getElementById('pt-pct-' + step);
+  if (!sc || !bar || !pct) return;
+  var v = parseInt(sc.value) || 0;
+  bar.style.width = (v * 10) + '%';
+  pct.textContent = (v * 10) + '%';
+  markDirty();
+}
+
+function onLevelChange() {
+  markDirty();
+  var lv = document.getElementById('f-level') && document.getElementById('f-level').value;
+  var cfg = LEVEL_CFG[lv];
+  var sf = document.getElementById('score-fields');
+  if (sf) sf.innerHTML = buildScoreFields(cfg, {});
+  var wf = document.getElementById('wrong-fields');
+  if (wf) wf.innerHTML = buildWrongFields(cfg, []);
+  var af = document.getElementById('avg-fields');
+  if (af) af.innerHTML = buildAvgFields(cfg, {});
+  var fsT = document.querySelector('#score-section .fs-title');
+  if (fsT) {
+    var lbl = cfg ? ' <span style="font-size:10px;font-weight:400;color:var(--gray-500);margin-left:4px">(' + cfg.label + ')</span>' : '';
+    fsT.innerHTML = '<i class="ti ti-chart-bar"></i>영역별 점수' + lbl;
+  }
+}
+
+function toggleWrong(areaKey, q) {
+  var btn = document.getElementById('wq-' + currentId + '-' + q);
+  if (!btn) return;
+  var isCurrentlyWrong = btn.classList.contains('wrong');
+  if (!isCurrentlyWrong) {
+    var lv = document.getElementById('f-level') && document.getElementById('f-level').value;
+    var cfg = LEVEL_CFG[lv];
+    var area = cfg && cfg.areas.find(function(a) { return a.key === areaKey; });
+    if (area) {
+      var inputScoreEl = document.getElementById('sc-' + areaKey);
+      var inputScore = inputScoreEl ? parseFloat(inputScoreEl.value) : null;
+      if (inputScore != null && !isNaN(inputScore)) {
+        var lostPts = area.max - inputScore;
+        var minPtPerQ = Math.round(area.max / area.qs.length);
+        if (minPtPerQ < 1) minPtPerQ = 1;
+        var maxWrongAllowed = Math.floor(lostPts / minPtPerQ);
+        var currentWrongCount = area.qs.filter(function(qn) {
+          var b = document.getElementById('wq-' + currentId + '-' + qn);
+          return b && b.classList.contains('wrong');
+        }).length;
+        if (currentWrongCount >= maxWrongAllowed) {
+          showToast('입력한 점수(' + inputScore + '점)로는 오답을 최대 ' + maxWrongAllowed + '개까지 체크할 수 있어요.');
+          return;
+        }
+      }
+    }
+  }
+  btn.classList.toggle('wrong');
+  markDirty();
+}
+
+function onTimeChange() {
+  markDirty();
+  var el = document.getElementById('f-time');
+  var ci = document.getElementById('f-time-c');
+  if (ci) ci.style.display = el && el.value === '__c__' ? 'block' : 'none';
+}
+
+function onTeacherChange() {
+  markDirty();
+  var el = document.getElementById('f-teacher');
+  var ci = document.getElementById('f-teacher-c');
+  if (ci) ci.style.display = el && el.value === '__c__' ? 'block' : 'none';
+}
+
+function onDateInput(el) {
+  var v = el.value;
+  var raw = v.replace(/[^0-9]/g, '');
+  if (raw.length >= 8) {
+    var formatted = raw.slice(0,4) + '-' + raw.slice(4,6) + '-' + raw.slice(6,8);
+    var d = new Date(formatted);
+    if (!isNaN(d.getTime())) {
+      el.value = formatted;
+      onDateChange();
+      return;
+    }
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    onDateChange();
+  }
+}
+
+function onDateChange() {
+  markDirty();
+  var d = document.getElementById('f-date') && document.getElementById('f-date').value;
+  var sel = document.getElementById('f-start');
+  if (sel) sel.innerHTML = '<option value="">선택</option>' + (d ? buildStartOpts(d) : '');
+  renderRoadmap();
+}
+
 function renderForm(s){
   s=s||{};
   var isEx=!!students.find(function(x){return x.id===s.id;});
