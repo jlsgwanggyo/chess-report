@@ -256,10 +256,10 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
     <div class="student-list" id="student-list"></div>
     <div class="sidebar-actions">
       <div class="sel-count" id="sel-count"></div>
-      <button class="btn-bulk" id="btn-bulk" onclick="openPrint(getChecked())"><i class="ti ti-printer"></i>선택 일괄 인쇄</button>
+      <button class="btn-bulk" id="btn-bulk" id="btn-bulk-print"><i class="ti ti-printer"></i>선택 일괄 인쇄</button>
       <button class="btn-add-folder" id="btn-add-folder">📁 학기 폴더 추가</button>
-      <button class="btn-upload" onclick="openModal('upload-modal')"><i class="ti ti-table-import"></i>엑셀 업로드</button>
-      <button class="btn-new" onclick="newStudent()"><i class="ti ti-plus"></i>새 학생 추가</button>
+      <button class="btn-upload" id="btn-upload-trigger"><i class="ti ti-table-import"></i>엑셀 업로드</button>
+      <button class="btn-new" ><i class="ti ti-plus"></i>새 학생 추가</button>
     </div>
   </aside>
   <main class="main">
@@ -267,9 +267,9 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
       <div class="topbar-title" id="topbar-title">학생을 선택하거나 새로 추가하세요</div>
       <span id="sync-status" style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--gray-100)"></span>
       <span class="editing-badge" id="editing-badge">수정 중</span>
-      <button class="btn-print-one" id="btn-print-one" onclick="printOne()"><i class="ti ti-printer"></i>인쇄</button>
-      <button class="btn-del" id="btn-del" onclick="deleteStudent()"><i class="ti ti-trash"></i></button>
-      <button class="btn-save" id="btn-save" onclick="saveStudent()"><i class="ti ti-device-floppy"></i>저장</button>
+      <button class="btn-print-one" id="btn-print-one" ><i class="ti ti-printer"></i>인쇄</button>
+      <button class="btn-del" id="btn-del" ><i class="ti ti-trash"></i></button>
+      <button class="btn-save" id="btn-save" ><i class="ti ti-device-floppy"></i>저장</button>
     </div>
     <div class="content" id="main-content">
       <div class="empty"><i class="ti ti-users"></i><p>학생을 선택하거나 새로 추가하세요</p><p class="empty-desc">좌측 목록에서 선택하거나 새 학생을 추가해주세요</p></div>
@@ -281,21 +281,21 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
   <div class="modal">
     <div class="modal-title">엑셀 일괄 업로드</div>
     <div class="modal-sub">.xlsx 또는 .csv 파일을 올려주세요. (CSV 권장 — 엑셀에서 편집 가능)</div>
-    <div class="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="this.classList.remove('over');handleFile(event.dataTransfer.files[0]);event.preventDefault()">
-      <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".xlsx,.xls">
       <i class="ti ti-file-spreadsheet"></i><p>클릭하거나 파일을 드래그하세요</p><p style="font-size:11px;margin-top:4px;color:#9ca3af">.xlsx / .csv 모두 지원</p>
     </div>
     <div class="upload-ok" id="upload-ok"></div>
     <div class="upload-err" id="upload-err"></div>
-    <div class="modal-btns"><button onclick="closeModal('upload-modal')">닫기</button></div>
+    <div class="modal-btns"><button id="btn-close-upload">닫기</button></div>
   </div>
 </div>
 
 <div class="print-overlay" id="print-overlay">
   <div class="print-toolbar">
     <div class="ptoolbar-title" id="print-title">성적표 미리보기</div>
-    <button class="pbtn pbtn-close" onclick="closePrint()"><i class="ti ti-x"></i>닫기</button>
-    <button class="pbtn pbtn-go" onclick="window.print()"><i class="ti ti-printer"></i>인쇄 / PDF 저장</button>
+    <button class="pbtn pbtn-close" id="btn-close-print"><i class="ti ti-x"></i>닫기</button>
+    <button class="pbtn pbtn-go" id="btn-do-print"><i class="ti ti-printer"></i>인쇄 / PDF 저장</button>
   </div>
   <div class="print-cards" id="print-cards"></div>
 </div>
@@ -1783,4 +1783,36 @@ function showEmpty(){
 }
 
 loadStudents();
+
+// ── 버튼 이벤트 연결 (inline onclick 완전 제거) ──────────────
+function bindButtons() {
+  function on(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+  on('btn-new',         function(){ newStudent(); });
+  on('btn-save',        function(){ saveStudent(); });
+  on('btn-del',         function(){ deleteStudent(); });
+  on('btn-print-one',   function(){ printOne(); });
+  on('btn-bulk-print',  function(){ openPrint(getChecked()); });
+  on('btn-upload-trigger', function(){ openModal('upload-modal'); });
+  on('btn-close-upload',   function(){ closeModal('upload-modal'); });
+  on('btn-close-print',    function(){ closePrint(); });
+  on('btn-do-print',       function(){ window.print(); });
+  on('search-input', null);
+  // 드롭존
+  var dz = document.getElementById('drop-zone');
+  var fi = document.getElementById('file-input');
+  if (dz && fi) {
+    dz.addEventListener('click', function(){ fi.click(); });
+    dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave', function(){ dz.classList.remove('over'); });
+    dz.addEventListener('drop', function(e){
+      e.preventDefault(); dz.classList.remove('over');
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+  }
+  if (fi) fi.addEventListener('change', function(){ handleFile(fi.files[0]); });
+}
+bindButtons();
 tml>
