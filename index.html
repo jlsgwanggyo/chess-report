@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CHESS 입학시험 성적표 v14</title>
+<title>CHESS 입학시험 성적표</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.33.0/dist/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -264,14 +264,14 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
   <main class="main">
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">학생을 선택하거나 새로 추가하세요</div>
-      <span id="sync-status" style="font-size:11px;padding:2px 8px;border-radius:8px;background:#f3f4f6"></span>
+      <span id="sync-status" style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--gray-100)"></span>
       <span class="editing-badge" id="editing-badge">수정 중</span>
       <button class="btn-print-one" id="btn-print-one" onclick="printOne()"><i class="ti ti-printer"></i>인쇄</button>
       <button class="btn-del" id="btn-del" onclick="deleteStudent()"><i class="ti ti-trash"></i></button>
       <button class="btn-save" id="btn-save" onclick="saveStudent()"><i class="ti ti-device-floppy"></i>저장</button>
     </div>
     <div class="content" id="main-content">
-      <div class="empty"><i class="ti ti-file-text"></i><p>좌측에서 학생을 선택하거나 새 학생을 추가하세요</p></div>
+      <div class="empty"><i class="ti ti-users"></i><p>학생을 선택하거나 새로 추가하세요</p><p class="empty-desc">좌측 목록에서 선택하거나 새 학생을 추가해주세요</p></div>
     </div>
   </main>
 </div>
@@ -305,193 +305,118 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
 "use strict";
 
 // ── 상수 ──────────────────────────────────────────────────────
+var GAS_URL='https://script.google.com/macros/s/AKfycbzHtWIHXD3xsNwsq1OT1EJyzNfcamEVLFvvdd1NfrhKB-k9gWfm21UUoumsbBN0ZLof/exec';
 var CLASS_TIMES=['월수금 2:45~4:25 (100분)','월수금 4:25~6:05 (100분)','월수금 6:05~7:45 (100분)','화목 3:20~5:50 (150분)','화목 6:00~8:30 (150분)'];
 var TEACHERS=['한유리 (Lydia) 선생님','유선영 (Linda) 선생님','최지원 (Lindsay) 선생님','김가영 (Kaya) 선생님','윤은진 (Anne) 선생님','이예원 (Karen) 선생님','이소원 (Lauren) 선생님','홍정현 (Jessica) 선생님'];
 var PT_LEVELS=['IS','DSA','DSB','DSC','DSD','LSA','LSB','LSC','LSD'];
 var HISTORY_ITEMS=['영어를 처음 배운다.','알파벳 26개의 대소문자를 구분하여 쓸 수 있다.','Phonics를 공부한 적이 있으며, 단어의 뜻을 몰라도 발음을 할 수 있다.','1,000자 정도의 스토리북을 올바른 발음으로 읽고, 내용에 대해 답할 수 있다.','책을 읽고, 주어진 질문에 대해 문법적 오류가 없는 올바른 문장으로 말하고 쓸 수 있다.','책의 주제 및 내용을 묻는 질문에 대해 한 문단 이상으로 자신의 의견을 표현할 수 있다.','주어진 주제 및 질문에 대해 본인의 생각을 정확히 전달하고, 상대를 설득하는 말하기와 쓰기가 가능하다.'];
 
 // ── 시험지 설정 ────────────────────────────────────────────────
-var LEVEL_CFG = {
-  Phonics:{label:'CHESS PT_Phonics',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:100,qs:[...Array(40)].map(function(_,i){return i+1;}),color:'#553c9a'}]},
-  D1:{label:'CHESS PT_D1',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:48,qs:[...Array(16)].map(function(_,i){return i+1;}),color:'#553c9a'},{key:'a2',n:2,name:'Vocabulary & Expressions',max:52,qs:[...Array(17)].map(function(_,i){return i+17;}),color:'#b7791f'}]},
+var LEVEL_CFG={
+  Phonics:{label:'CHESS PT_Phonics',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:100,qs:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40],color:'#553c9a'}]},
+  D1:{label:'CHESS PT_D1',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:48,qs:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],color:'#553c9a'},{key:'a2',n:2,name:'Vocabulary & Expressions',max:52,qs:[17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33],color:'#b7791f'}]},
   D2:{label:'CHESS PT_D2',total:100,areas:[{key:'a1',n:1,name:'Phonics',max:15,qs:[1,2,3,4,5],color:'#553c9a'},{key:'a2',n:2,name:'Listening Comprehension',max:30,qs:[6,7,8,9,10,11,12,13,14,15],color:'#2b6cb0'},{key:'a3',n:3,name:'Reading Comprehension',max:30,qs:[16,17,18,19,20,21,22,23,24,25],color:'#276749'},{key:'a4',n:4,name:'Vocabulary',max:25,qs:[26,27,28,29,30,31,32,33],color:'#b7791f'}]},
-  D3:{label:'CHESS PT_D3',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+15;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary & Grammar',max:16,qs:[...Array(5)].map(function(_,i){return i+29;}),color:'#b7791f'}]},
-  D4:{label:'CHESS PT_D4',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:42,qs:[...Array(14)].map(function(_,i){return i+15;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:6,qs:[29,30],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:10,qs:[31,32,33],color:'#702459'}]},
-  L1:{label:'CHESS PT_L1',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
-  L2:{label:'CHESS PT_L2',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
-  L3:{label:'CHESS PT_L3',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
-  L4:{label:'CHESS PT_L4',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+1;}),color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[...Array(12)].map(function(_,i){return i+13;}),color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]}
+  D3:{label:'CHESS PT_D3',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:42,qs:[1,2,3,4,5,6,7,8,9,10,11,12,13,14],color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:42,qs:[15,16,17,18,19,20,21,22,23,24,25,26,27,28],color:'#276749'},{key:'a3',n:3,name:'Vocabulary & Grammar',max:16,qs:[29,30,31,32,33],color:'#b7791f'}]},
+  D4:{label:'CHESS PT_D4',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:42,qs:[1,2,3,4,5,6,7,8,9,10,11,12,13,14],color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:42,qs:[15,16,17,18,19,20,21,22,23,24,25,26,27,28],color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:6,qs:[29,30],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:10,qs:[31,32,33],color:'#702459'}]},
+  L1:{label:'CHESS PT_L1',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[1,2,3,4,5,6,7,8,9,10,11,12],color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[13,14,15,16,17,18,19,20,21,22,23,24],color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
+  L2:{label:'CHESS PT_L2',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[1,2,3,4,5,6,7,8,9,10,11,12],color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[13,14,15,16,17,18,19,20,21,22,23,24],color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
+  L3:{label:'CHESS PT_L3',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[1,2,3,4,5,6,7,8,9,10,11,12],color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[13,14,15,16,17,18,19,20,21,22,23,24],color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]},
+  L4:{label:'CHESS PT_L4',total:100,areas:[{key:'a1',n:1,name:'Listening Comprehension',max:36,qs:[1,2,3,4,5,6,7,8,9,10,11,12],color:'#2b6cb0'},{key:'a2',n:2,name:'Reading Comprehension',max:36,qs:[13,14,15,16,17,18,19,20,21,22,23,24],color:'#276749'},{key:'a3',n:3,name:'Vocabulary',max:15,qs:[25,26,27,28,29],color:'#b7791f'},{key:'a4',n:4,name:'Grammar',max:13,qs:[30,31,32,33],color:'#702459'}]}
 };
-window.LEVEL_CFG = LEVEL_CFG;
+window.LEVEL_CFG=LEVEL_CFG;
 
 var CHESS_BASE=[['IS','IS'],['DSA','DS'],['DSB','DS'],['DSC','DS'],['DSD','DS'],['LSA','LS'],['LSB','LS'],['LSC','LS'],['LSD','LS'],['MSA','MS'],['MSB','MS']];
-var ALL_SUBS=[];CHESS_BASE.forEach(function(p){ALL_SUBS.push({sub:p[0]+'1',stage:p[1]});ALL_SUBS.push({sub:p[0]+'2',stage:p[1]});});
+var ALL_SUBS=[];
+CHESS_BASE.forEach(function(p){ALL_SUBS.push({sub:p[0]+'1',stage:p[1]});ALL_SUBS.push({sub:p[0]+'2',stage:p[1]});});
 var SEM_MONTHS=[[12,1,2],[3,4,5],[6,7,8],[9,10,11]];
 var SEM_START=[12,3,6,9];
 var SEM_LABELS={12:'12월 학기',3:'3월 학기',6:'6월 학기',9:'9월 학기'};
 
+// ── 앱 상태 ─────────────────────────────────────────────────
 var students=[],currentId=null,isDirty=false;
-function loadStudents() {
-  showSyncStatus('⏳ 불러오는 중...', '#d97706');
-  gasGet(GAS_URL).then(function(res) {
-    if (res.ok && res.students) {
-      students = res.students;
-      students.sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
-      showSyncStatus('✓ ' + students.length + '명 불러옴', '#16a34a');
-    } else {
-      showSyncStatus('⚠ 불러오기 실패', '#dc2626');
-    }
-    renderSidebar();
-  });
-}
 
+// ── 유틸 ────────────────────────────────────────────────────
+function dateToSem(d){if(!d)return null;var dt=new Date(d),m=dt.getMonth()+1,y=dt.getFullYear();for(var i=0;i<4;i++)if(SEM_MONTHS[i].indexOf(m)>=0)return{year:y,semIdx:i};return null;}
+function addSems(b,n){var y=b.year,s=b.semIdx;s+=n;y+=Math.floor(s/4);s=((s%4)+4)%4;return{year:y,semIdx:s};}
+function monthToSem(m){if(m>=12||m<=2)return 12;if(m>=3&&m<=5)return 3;if(m>=6&&m<=8)return 6;return 9;}
+function parseStart(raw){if(!raw)return'';var s=String(raw).trim();if(s==='즉시')return'즉시';var a=s.match(/^(\d{1,2})월/);if(a)return String(monthToSem(+a[1]));var b=s.match(/^(\d{1,2})[\/\-.]/);if(b)return String(monthToSem(+b[1]));var c=s.match(/^(\d{1,2})$/);if(c&&+c[1]>=1&&+c[1]<=12)return String(monthToSem(+c[1]));return'즉시';}
+function buildStartOpts(ds,sel){sel=sel||'';if(!ds)return'';var m=new Date(ds).getMonth()+1,near=null,md=99;SEM_START.forEach(function(sm){var d=Math.abs(m-sm);if(d>6)d=12-d;if(d<=1&&d<md){md=d;near=sm;}});var ord;if(near!==null){var i=SEM_START.indexOf(near);ord=SEM_START.map(function(_,j){return SEM_START[(i+j)%4];});}else{var ci=m>=3&&m<=5?1:m>=6&&m<=8?2:m>=9&&m<=11?3:0;var ni=(ci+1)%4;ord=SEM_START.map(function(_,j){return SEM_START[(ni+j)%4];});}var sv=String(sel);return['<option value="즉시"'+(sv==='즉시'?' selected':'')+'>즉시</option>'].concat(ord.map(function(sm){return'<option value="'+sm+'"'+(sv==sm?' selected':'')+'>'+SEM_LABELS[sm]+'</option>';})).join('');}
 
-// ── Google Sheets 통신 ─────────────────────────────────────────
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzHtWIHXD3xsNwsq1OT1EJyzNfcamEVLFvvdd1NfrhKB-k9gWfm21UUoumsbBN0ZLof/exec';
+// ── GAS 통신 ─────────────────────────────────────────────────
+function showSyncStatus(msg,color){var el=document.getElementById('sync-status');if(el){el.textContent=msg;el.style.color=color||'#6b7280';}}
 
-function showSyncStatus(msg, color) {
-  var el = document.getElementById('sync-status');
-  if (el) { el.textContent = msg; el.style.color = color || '#6b7280'; }
-}
-
-function gasJsonp(params) {
-  return new Promise(function(resolve) {
-    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*9999);
-    var script = document.createElement('script');
-    var timer = setTimeout(function() {
+function gasJsonp(params){
+  return new Promise(function(resolve){
+    var cbName='cb_'+Date.now()+'_'+Math.floor(Math.random()*9999);
+    var script=document.createElement('script');
+    var timer=setTimeout(function(){
       delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      resolve({ ok: false, error: 'timeout' });
-    }, 15000);
-    window[cbName] = function(data) {
+      if(script.parentNode)script.parentNode.removeChild(script);
+      resolve({ok:false,error:'timeout'});
+    },15000);
+    window[cbName]=function(data){
       clearTimeout(timer);
       delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
+      if(script.parentNode)script.parentNode.removeChild(script);
       resolve(data);
     };
-    var qs = 'callback=' + cbName + '&t=' + Date.now();
-    Object.keys(params).forEach(function(k) {
-      qs += '&' + k + '=' + encodeURIComponent(
-        typeof params[k] === 'object' ? JSON.stringify(params[k]) : String(params[k])
-      );
+    var qs='callback='+cbName+'&t='+Date.now();
+    Object.keys(params).forEach(function(k){
+      qs+='&'+k+'='+encodeURIComponent(typeof params[k]==='object'?JSON.stringify(params[k]):String(params[k]));
     });
-    script.src = GAS_URL + '?' + qs;
-    script.onerror = function() {
-      clearTimeout(timer);
-      delete window[cbName];
-      resolve({ ok: false, error: 'network error' });
-    };
+    script.src=GAS_URL+'?'+qs;
+    script.onerror=function(){clearTimeout(timer);delete window[cbName];resolve({ok:false,error:'network error'});};
     document.body.appendChild(script);
   });
 }
-
-function gasGet(url) {
-  return gasJsonp({ action: 'list' });
-}
-
-function gasPost(data) {
-  var params = { action: data.action };
-  if (data.student)  params.data = data.student;
-  if (data.students) params.data = data.students;
-  if (data.id)       params.id   = data.id;
+function gasGet(){return gasJsonp({action:'list'});}
+function gasPost(data){
+  var params={action:data.action};
+  if(data.student)params.data=data.student;
+  if(data.students)params.data=data.students;
+  if(data.id)params.id=data.id;
   return gasJsonp(params);
 }
+function gasDelete(id){return gasJsonp({action:'delete',id:id});}
 
-function gasDelete(id) {
-  return gasJsonp({ action: 'delete', id: id });
+// ── 스토리지 ────────────────────────────────────────────────
+function loadStudents(){
+  showSyncStatus('⏳ 불러오는 중...','#d97706');
+  gasGet().then(function(res){
+    if(res.ok&&res.students){
+      students=res.students;
+      students.sort(function(a,b){return(b.updatedAt||0)-(a.updatedAt||0);});
+      showSyncStatus('✓ '+students.length+'명 불러옴','#16a34a');
+    }else{
+      showSyncStatus('⚠ 불러오기 실패','#dc2626');
+    }
+    renderSidebar();
+    setTimeout(function(){showSyncStatus('','');},3000);
+  });
 }
-
-// ── 학생 CRUD ─────────────────────────────────────────────────
-function newStudent() {
-  if (isDirty && !confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?')) return;
-  currentId = 's_' + Date.now();
-  isDirty = false;
-  renderForm({ id: currentId });
-  setTimeout(function() { var el = document.getElementById('f-name'); if (el) el.focus(); }, 50);
+function persist(s){
+  showSyncStatus('💾 저장 중...','#d97706');
+  gasPost({action:'save',student:s}).then(function(res){
+    if(res.ok)showSyncStatus('✓ 저장 완료','#16a34a');
+    else showSyncStatus('⚠ 저장 실패: '+(res.error||''),'#dc2626');
+    setTimeout(function(){showSyncStatus('','');},3000);
+  });
 }
-
-function selectStudent(id) {
-  if (isDirty && currentId !== id && !confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?')) return;
-  currentId = id;
-  isDirty = false;
-  renderForm(students.find(function(x) { return x.id === id; }) || { id: id });
-  renderSidebar();
-}
-
-function saveStudent() {
-  var s = collectForm();
-  if (!s) { showToast('학생명을 입력해 주세요.'); return; }
-  s.updatedAt = Date.now();
-  var ex = students.find(function(x) { return x.id === currentId; });
-  if (ex) Object.assign(ex, s); else students.unshift(s);
-  isDirty = false;
-  document.getElementById('editing-badge').style.display = 'none';
-  document.getElementById('btn-del').style.display = 'flex';
-  renderSidebar();
-  persist(s);
-}
-
-function deleteStudent() {
-  if (!currentId || !confirm('삭제할까요?')) return;
-  var delId = currentId;
-  gasDelete(delId).then(function(res) {
-    if (!res.ok) { showToast('삭제 실패: ' + (res.error || '')); return; }
-    students = students.filter(function(x) { return x.id !== delId; });
-    currentId = null; isDirty = false; renderSidebar(); showEmpty();
-    showToast('삭제됐어요!');
+function persistAll(list){
+  showSyncStatus('💾 '+list.length+'명 저장 중...','#d97706');
+  gasPost({action:'saveAll',students:list}).then(function(res){
+    if(res.ok)showSyncStatus('✓ '+list.length+'명 저장 완료','#16a34a');
+    else showSyncStatus('⚠ 저장 실패','#dc2626');
+    setTimeout(function(){showSyncStatus('','');},3000);
   });
 }
 
-function onCbChange() {
-  var n = document.querySelectorAll('.student-cb:checked').length;
-  document.getElementById('sel-count').style.display = n ? 'block' : 'none';
-  document.getElementById('sel-count').textContent = n + '명 선택됨';
-  document.getElementById('btn-bulk').style.display = n ? 'flex' : 'none';
-}
-
-function getChecked() {
-  return students.filter(function(s) {
-    var el = document.getElementById('cb-' + s.id);
-    return el && el.checked;
-  });
-}
-
-function persist(s) {
-  showSyncStatus('💾 저장 중...', '#d97706');
-  gasPost({ action: 'save', student: s }).then(function(res) {
-    if (res.ok) showSyncStatus('✓ 저장 완료', '#16a34a');
-    else showSyncStatus('⚠ 저장 실패: ' + (res.error||''), '#dc2626');
-    setTimeout(function(){ showSyncStatus('', ''); }, 3000);
-  });
-}
-
-function persistAll(list) {
-  showSyncStatus('💾 ' + list.length + '명 저장 중...', '#d97706');
-  gasPost({ action: 'saveAll', students: list }).then(function(res) {
-    if (res.ok) showSyncStatus('✓ ' + list.length + '명 저장 완료', '#16a34a');
-    else showSyncStatus('⚠ 저장 실패: ' + (res.error||''), '#dc2626');
-    setTimeout(function(){ showSyncStatus('', ''); }, 3000);
-  });
-}
-
-function gasDelete(id) {
-  return gasJsonp({ action: 'delete', id: id });
-}
-
-function filterStudents(){
-  var q = document.getElementById('search-input').value.trim().toLowerCase();
-  document.querySelectorAll('.student-item').forEach(function(el){
-    el.style.display = (!q || el.dataset.name.indexOf(q)>=0 || el.dataset.code.indexOf(q)>=0) ? '' : 'none';
-  });
-}
-function markDirty(){isDirty=true;document.getElementById('editing-badge').style.display='';}
-
-// ── 사이드바 ──────────────────────────────────────────────────
+// ── 사이드바 ────────────────────────────────────────────────
 function renderSidebar(){
   document.getElementById('total-count').textContent=students.length?'('+students.length+'명)':'';
   var list=document.getElementById('student-list');
   if(!students.length){
-    list.innerHTML='<div style="padding:12px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">등록된 학생이 없어요</div>';
+    list.innerHTML='<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">등록된 학생이 없어요</div>';
     return;
   }
   list.innerHTML=students.map(function(s){
@@ -500,7 +425,7 @@ function renderSidebar(){
       +' data-name="'+(s.name||'').toLowerCase()+'"'
       +' data-code="'+(s.memberCode||'').toLowerCase()+'">'
       +'<input type="checkbox" class="student-cb" id="cb-'+s.id+'" onchange="onCbChange()" onclick="event.stopPropagation()">'
-      +'<div class="student-info" onclick="selectStudent(''+s.id+'')">'
+      +'<div class="student-info" onclick="selectStudent(\''+s.id+'\')">'
         +'<div class="student-name">'+(s.name||'이름 없음')
           +(s.memberCode?'<span style="font-size:9px;color:rgba(255,255,255,.35);margin-left:4px">'+s.memberCode+'</span>':'')
         +'</div>'
@@ -510,8 +435,62 @@ function renderSidebar(){
   }).join('');
 }
 
+function filterStudents(){
+  var q=document.getElementById('search-input').value.trim().toLowerCase();
+  document.querySelectorAll('.student-item').forEach(function(el){
+    el.style.display=(!q||el.dataset.name.indexOf(q)>=0||el.dataset.code.indexOf(q)>=0)?'':'none';
+  });
+}
 
+function onCbChange(){
+  var n=document.querySelectorAll('.student-cb:checked').length;
+  document.getElementById('sel-count').style.display=n?'block':'none';
+  document.getElementById('sel-count').textContent=n+'명 선택됨';
+  document.getElementById('btn-bulk').style.display=n?'flex':'none';
+}
+function getChecked(){return students.filter(function(s){var el=document.getElementById('cb-'+s.id);return el&&el.checked;});}
 
+// ── CRUD ────────────────────────────────────────────────────
+function newStudent(){
+  if(isDirty&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;
+  currentId='s_'+Date.now();
+  isDirty=false;
+  renderForm({id:currentId});
+  setTimeout(function(){var el=document.getElementById('f-name');if(el)el.focus();},50);
+}
+
+function selectStudent(id){
+  if(isDirty&&currentId!==id&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;
+  currentId=id;isDirty=false;
+  renderForm(students.find(function(x){return x.id===id;})||{id:id});
+  renderSidebar();
+}
+
+function saveStudent(){
+  var s=collectForm();
+  if(!s){showToast('학생명을 입력해 주세요.');return;}
+  s.updatedAt=Date.now();
+  var ex=students.find(function(x){return x.id===currentId;});
+  if(ex)Object.assign(ex,s);else students.unshift(s);
+  isDirty=false;
+  document.getElementById('editing-badge').style.display='none';
+  document.getElementById('btn-del').style.display='flex';
+  renderSidebar();
+  persist(s);
+}
+
+function deleteStudent(){
+  if(!currentId||!confirm('삭제할까요?'))return;
+  var delId=currentId;
+  gasDelete(delId).then(function(res){
+    if(!res.ok){showToast('삭제 실패: '+(res.error||''));return;}
+    students=students.filter(function(x){return x.id!==delId;});
+    currentId=null;isDirty=false;renderSidebar();showEmpty();
+    showToast('삭제됐어요!');
+  });
+}
+
+function markDirty(){isDirty=true;document.getElementById('editing-badge').style.display='';}
 
 
 function renderForm(s){
@@ -567,6 +546,7 @@ function renderForm(s){
   renderRoadmap(s);
 }
 
+
 function onTimeChange(){markDirty();var el=document.getElementById('f-time'),ci=document.getElementById('f-time-c');if(ci)ci.style.display=el&&el.value==='__c__'?'block':'none';}
 function onTeacherChange(){markDirty();var el=document.getElementById('f-teacher'),ci=document.getElementById('f-teacher-c');if(ci)ci.style.display=el&&el.value==='__c__'?'block':'none';}
 function onDateInput(el){
@@ -619,6 +599,7 @@ function renderRoadmap(s){
 }
 
 // ── 분석 엔진 ──────────────────────────────────────────────────
+
 "use strict";
 // ════════════════════════════════════════════════════════════════
 // CHESS 입학시험 분석 엔진 v2 — 전체 8레벨 (D1~D4, L1~L4)
@@ -1186,6 +1167,7 @@ function printOne(){var s=collectForm()||students.find(function(x){return x.id==
 function openPrint(list){if(!list||!list.length){showToast('인쇄할 학생을 선택해 주세요.');return;}document.getElementById('print-title').textContent=list.length===1?list[0].name+' 성적표 미리보기':'성적표 '+list.length+'명 일괄 인쇄';document.getElementById('print-cards').innerHTML=list.map(function(s,i){return buildReportHtml(s,generateAnalysis(s))+(i<list.length-1?'<div class="pg-break"></div>':'');}).join('');document.getElementById('print-overlay').classList.add('open');}
 function closePrint(){document.getElementById('print-overlay').classList.remove('open');}
 
+
 function buildReportHtml(s,analysis){
   var cfg=LEVEL_CFG[s.testLevel];
   var total=null;if(cfg){var sum=0,has=false;cfg.areas.forEach(function(a){var v=s.scores&&s.scores[a.key];if(v!=null){sum+=v;has=true;}});if(has)total=sum;}
@@ -1247,6 +1229,7 @@ function buildReportHtml(s,analysis){
     +'<div class="rc-ft"><span style="color:#7a9ab8;font-size:9px">정상어학원 · 본 성적표는 입학 상담 목적으로 발급됩니다</span><span style="font-family:Georgia,serif;font-weight:700;color:#4db8e8;font-size:12px;letter-spacing:1px">CHESS</span></div></div>';
 }
 
+
 function excelDateToStr(v){if(!v)return'';if(typeof v==='string'){var m=v.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');}if(typeof v==='number'){var d=new Date((v-25569)*86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}return String(v);}
 function handleFile(file){
   if(!file)return;var ok=document.getElementById('upload-ok'),er=document.getElementById('upload-err');ok.style.display='none';er.style.display='none';
@@ -1294,6 +1277,15 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
 function showEmpty(){currentId=null;isDirty=false;document.getElementById('topbar-title').textContent='학생을 선택하거나 새로 추가하세요';document.getElementById('editing-badge').style.display='none';['btn-save','btn-print-one','btn-del'].forEach(function(id){document.getElementById(id).style.display='none';});document.getElementById('main-content').innerHTML='<div class="empty"><i class="ti ti-file-text"></i><p>좌측에서 학생을 선택하거나 새 학생을 추가하세요</p></div>';}
+
+
+function showEmpty(){
+  currentId=null;isDirty=false;
+  document.getElementById('topbar-title').textContent='학생을 선택하거나 새로 추가하세요';
+  document.getElementById('editing-badge').style.display='none';
+  ['btn-save','btn-print-one','btn-del'].forEach(function(id){document.getElementById(id).style.display='none';});
+  document.getElementById('main-content').innerHTML='<div class="empty"><i class="ti ti-users"></i><p>학생을 선택하거나 새로 추가하세요</p></div>';
+}
 
 loadStudents();
 </script>
