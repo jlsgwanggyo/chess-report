@@ -545,7 +545,7 @@ function renderForm(s){
     +'<div class="fg"><label>학생명 *</label><input id="f-name" value="'+(s.name||'')+'" placeholder="홍길동" oninput="markDirty()"></div>'
     +'<div class="fg"><label>학교</label><input id="f-school" value="'+(s.school||'')+'" placeholder="○○초등학교" oninput="markDirty()"></div>'
     +'<div class="fg"><label>학년</label><select id="f-grade" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+grOpts+'</select></div>'
-    +'<div class="fg"><label>시험일</label><input type="date" id="f-date" value="'+(s.testDate||'')+'" oninput="onDateChange();autoParseDate(this)" oninput="onDateChange()"></div>'
+    +'<div class="fg"><label>시험일</label><input type="text" placeholder="YYYY-MM-DD" maxlength="10" id="f-date" value="'+(s.testDate||'')+'" oninput="onDateInput(this)"></div>'
     +'<div class="fg"><label>수업 시작</label><select id="f-start" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+(s.testDate?buildStartOpts(s.testDate,s.startSem||''):'')+'</select></div>'
     +'<div class="fg"><label>시험지 레벨</label><select id="f-level" onchange="onLevelChange()"><option value="">선택</option>'+lvOpts+'</select></div>'
     +'<div class="fg"><label>CHESS 배치 레벨</label><select id="f-chess" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+chOpts+'</select></div>'
@@ -572,21 +572,20 @@ function renderForm(s){
 
 function onTimeChange(){markDirty();var el=document.getElementById('f-time'),ci=document.getElementById('f-time-c');if(ci)ci.style.display=el&&el.value==='__c__'?'block':'none';}
 function onTeacherChange(){markDirty();var el=document.getElementById('f-teacher'),ci=document.getElementById('f-teacher-c');if(ci)ci.style.display=el&&el.value==='__c__'?'block':'none';}
-function autoParseDate(el){
-  // 숫자만 추출
-  var raw = el.value.replace(/\D/g,'');
-  if(raw.length === 8){
-    // 20260607 → 2026-06-07
-    var yyyy = raw.slice(0,4);
-    var mm   = raw.slice(4,6);
-    var dd   = raw.slice(6,8);
-    var formatted = yyyy + '-' + mm + '-' + dd;
-    // 유효 날짜 확인
+function onDateInput(el){
+  var v = el.value;
+  var raw = v.replace(/[^0-9]/g,'');
+  if(raw.length >= 8){
+    var formatted = raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
     var d = new Date(formatted);
     if(!isNaN(d.getTime())){
       el.value = formatted;
       onDateChange();
+      return;
     }
+  }
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+    onDateChange();
   }
 }
 function onDateChange(){markDirty();var d=document.getElementById('f-date')&&document.getElementById('f-date').value;var sel=document.getElementById('f-start');if(sel)sel.innerHTML='<option value="">선택</option>'+(d?buildStartOpts(d):'');renderRoadmap();}
@@ -1146,7 +1145,11 @@ function generateAnalysis(s) {
     } else if (firstWeak.name.indexOf('Vocab') >= 0 || firstWeak.name.indexOf('Grammar') >= 0) {
       supportDetail = '수업에서는 문장 속에서 어휘와 문법을 함께 익히는 방식으로, 자연스럽게 영어 표현력이 쌓이게 돼요.';
     } else if (firstWeak.name.indexOf('Phonics') >= 0) {
-      supportDetail = '수업에서 알파벳 음가와 파닉스 규칙을 소리·그림과 함께 체계적으로 익히면 읽기의 기초가 빠르게 자리잡혀요.';
+      if (chessLevel.indexOf('DSA') >= 0 || chessLevel.indexOf('IS') >= 0) {
+        supportDetail = '수업에서 알파벳 음가와 파닉스 규칙을 소리·그림과 함께 체계적으로 익히면 읽기의 기초가 빠르게 자리잡혀요.';
+      } else {
+        supportDetail = '파닉스 음가 인식은 수업을 통해 어휘·읽기와 함께 자연스럽게 보완되어 나가요.';
+      }
     }
     support = wStr + ' 영역은 수업을 통해 집중적으로 보완해 나갈 예정이에요. ' + supportDetail;
   } else if (mid.length > 0 && strong.length < areaStats.length) {
