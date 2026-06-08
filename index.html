@@ -5,7 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CHESS 입학시험 성적표</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.33.0/dist/tabler-icons.min.css">
+<style>
+/* Tabler Icons 인라인 대체 - CDN 없이 동작 */
+.ti { display:inline-block; font-style:normal; font-size:inherit; line-height:1; }
+.ti::before { font-family: sans-serif; }
+.ti-plus::before       { content: '+'; font-weight:700; font-size:1.1em; }
+.ti-trash::before      { content: '🗑'; font-size:.9em; }
+.ti-printer::before    { content: '🖨'; font-size:.9em; }
+.ti-device-floppy::before { content: '💾'; font-size:.9em; }
+.ti-table-import::before  { content: '📥'; font-size:.9em; }
+.ti-file-spreadsheet::before { content: '📊'; font-size:1.1em; }
+.ti-file-text::before  { content: '📄'; font-size:1.1em; }
+.ti-users::before      { content: '👥'; font-size:1.1em; }
+.ti-user::before       { content: '👤'; font-size:1.1em; }
+.ti-x::before          { content: '✕'; font-weight:700; }
+.ti-chart-bar::before  { content: '📈'; font-size:.9em; }
+.ti-building::before   { content: '🏫'; font-size:.9em; }
+.ti-map::before        { content: '🗺'; font-size:.9em; }
+.ti-message::before    { content: '💬'; font-size:.9em; }
+.ti-device-laptop::before { content: '💻'; font-size:.9em; }
+</style>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -126,7 +145,7 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
   width:30px;height:30px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-500);
-  transition:all .12s;user-select:none;font-family:var(--font-sans);
+  transition:all .12s;user-select:none;-webkit-user-select:none;font-family:var(--font-sans);
 }
 .wq-btn:hover{background:var(--gray-100);border-color:var(--gray-400);color:var(--gray-700);}
 .wq-btn.wrong{background:#dc2626;border-color:#b91c1c;color:#fff;box-shadow:0 1px 3px rgba(220,38,38,.3);}
@@ -145,7 +164,7 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
 .cell-now{background:#fffbeb}.cell-grad{background:#f0fdf4}.cell-ace{background:#faf5ff}.cell-empty{background:var(--gray-50);}
 
 /* ── 모달 ── */
-.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;align-items:center;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
 .modal-wrap.open{display:flex;}
 .modal{background:#fff;border-radius:var(--radius-xl);border:1px solid var(--gray-200);padding:24px;width:460px;max-width:96%;box-shadow:var(--shadow-lg);}
 .modal-title{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--gray-900);}
@@ -1775,9 +1794,6 @@ function processRows(dataRows,ok,er){
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
-function showEmpty(){currentId=null;isDirty=false;document.getElementById('topbar-title').textContent='학생을 선택하거나 새로 추가하세요';document.getElementById('editing-badge').style.display='none';['btn-save','btn-print-one','btn-del'].forEach(function(id){document.getElementById(id).style.display='none';});document.getElementById('main-content').innerHTML='<div class="empty"><i class="ti ti-file-text"></i><p>좌측에서 학생을 선택하거나 새 학생을 추가하세요</p></div>';}
-
-
 function showEmpty(){
   currentId=null;isDirty=false;
   document.getElementById('topbar-title').textContent='학생을 선택하거나 새로 추가하세요';
@@ -1819,4 +1835,6 @@ function bindButtons() {
   if (fi) fi.addEventListener('change', function(){ handleFile(fi.files[0]); });
 }
 bindButtons();
-tml>
+</script>
+</body>
+</html>
