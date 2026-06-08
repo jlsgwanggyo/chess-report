@@ -452,11 +452,10 @@ function moveStudentToFolder(studentId, folderId){
 // ── 드래그 앤 드롭 ─────────────────────────────────────────────
 var _dragStudentId=null;
 
-function onDragStart(studentId,evt){
+function onDragStart(el,studentId,evt){
   _dragStudentId=studentId;
   evt.dataTransfer.effectAllowed='move';
   setTimeout(function(){
-    var el=document.getElementById('si-'+studentId);
     if(el)el.classList.add('dragging');
   },0);
 }
@@ -601,152 +600,107 @@ function renderSidebar(){
     return;
   }
 
-  function renderStudent(s){
-    var match=!q||(s.name||'').toLowerCase().indexOf(q)>=0||(s.memberCode||'').toLowerCase().indexOf(q)>=0;
-    if(!match)return'';
-    return'<div class="student-item'+(s.id===currentId?' active':'')+'" id="si-'+s.id+'"'
-      +' draggable="true"'
-      +' ondragstart="onDragStart(''+s.id+'',event)"'
-      +' ondragend="onDragEnd(''+s.id+'')">'
-      +'<input type="checkbox" class="student-cb" id="cb-'+s.id+'" onchange="onCbChange()" onclick="event.stopPropagation()">'
-      +'<div class="student-info" onclick="selectStudent(''+s.id+'')">'
-      +'<div class="student-name">'+(s.name||'이름 없음')
-      +(s.memberCode?'<span style="font-size:9px;color:rgba(255,255,255,.35);margin-left:4px">'+s.memberCode+'</span>':'')
-      +'</div>'
-      +'<div class="student-meta">'+(s.testLevel||'—')+' · '+(s.grade?'초등'+s.grade+'학년':'학년미정')+'</div>'
-      +'</div>'
-      +'</div>';
-  }
+  var rows=[];
 
-  var html='';
-
-  // 등록된 폴더들
+  // 폴더별 렌더
   folders.forEach(function(folder){
     var fStudents=students.filter(function(s){return s.folder===folder.id;});
-    var visible=fStudents.filter(function(s){return !q||(s.name||'').toLowerCase().indexOf(q)>=0||(s.memberCode||'').toLowerCase().indexOf(q)>=0;});
+    var visible=fStudents.filter(function(s){
+      return !q||(s.name||'').toLowerCase().indexOf(q)>=0||(s.memberCode||'').toLowerCase().indexOf(q)>=0;
+    });
     if(q&&visible.length===0)return;
     var isOpen=folder.open!==false;
-    html+='<div class="folder-section">'
-      +'<div class="folder-header" onclick="toggleFolder(''+folder.id+'',event)">'
-      +'<i class="ti ti-chevron-right folder-icon'+(isOpen?' open':'')+'"></i>'
-      +'<span style="font-size:13px;">📁</span>'
-      +'<span class="folder-name">'+folder.name+'</span>'
-      +'<span class="folder-count">'+fStudents.length+'명</span>'
-      +'<div class="folder-actions">'
-      +'<button class="folder-action-btn" onclick="renameFolder(''+folder.id+'',event)" title="이름 변경"><i class="ti ti-pencil"></i></button>'
-      +'<button class="folder-action-btn danger" onclick="deleteFolder(''+folder.id+'',event)" title="삭제"><i class="ti ti-trash"></i></button>'
-      +'</div></div>'
-      +'<div class="folder-children'+(isOpen?' open':'')+'">'
-      +'<div class="folder-drop-zone" id="dz-'+folder.id+'"'
-      +' ondragover="onDropZoneDragOver(event,''+folder.id+'')"'
-      +' ondragleave="onDropZoneDragLeave(''+folder.id+'')"'
-      +' ondrop="onDropZoneDrop(event,''+folder.id+'')">'
-      +(visible.length===0&&!q?'<div style="padding:8px;font-size:10px;color:rgba(255,255,255,.2);text-align:center">드래그로 학생 추가</div>':'')
-      +visible.map(renderStudent).join('')
-      +'</div></div></div>';
+
+    var childrenHtml='';
+    if(visible.length===0&&!q){
+      childrenHtml='<div style="padding:8px;font-size:10px;color:rgba(255,255,255,.2);text-align:center">드래그로 학생 추가</div>';
+    } else {
+      visible.forEach(function(s){childrenHtml+=makeStudentItem(s);});
+    }
+
+    rows.push(
+      '<div class="folder-section">'
+        +'<div class="folder-header" onclick="toggleFolder(''+folder.id+'',event)">'
+          +'<i class="ti ti-chevron-right folder-icon'+(isOpen?' open':'')+'"></i>'
+          +'<span style="font-size:13px">📁</span>'
+          +'<span class="folder-name">'+folder.name+'</span>'
+          +'<span class="folder-count">'+fStudents.length+'명</span>'
+          +'<div class="folder-actions">'
+            +'<button class="folder-action-btn" onclick="renameFolder(''+folder.id+'',event)" title="이름 변경"><i class="ti ti-pencil"></i></button>'
+            +'<button class="folder-action-btn danger" onclick="deleteFolder(''+folder.id+'',event)" title="삭제"><i class="ti ti-trash"></i></button>'
+          +'</div>'
+        +'</div>'
+        +'<div class="folder-children'+(isOpen?' open':'')+'">'
+          +'<div class="folder-drop-zone" id="dz-'+folder.id+'"'
+            +' ondragover="onDropZoneDragOver(event,''+folder.id+'')"'
+            +' ondragleave="onDropZoneDragLeave(''+folder.id+'')"'
+            +' ondrop="onDropZoneDrop(event,''+folder.id+'')">'
+            +childrenHtml
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    );
   });
 
   // 미분류
-  var uncat=students.filter(function(s){return!s.folder||s.folder==='';});
-  var uncatVis=uncat.filter(function(s){return !q||(s.name||'').toLowerCase().indexOf(q)>=0||(s.memberCode||'').toLowerCase().indexOf(q)>=0;});
+  var uncat=students.filter(function(s){return !s.folder||s.folder==='';});
+  var uncatVis=uncat.filter(function(s){
+    return !q||(s.name||'').toLowerCase().indexOf(q)>=0||(s.memberCode||'').toLowerCase().indexOf(q)>=0;
+  });
   var uncOpen=window._uncOpen!==false;
   if(!q||uncatVis.length>0){
-    html+='<div class="folder-section">'
-      +'<div class="folder-header" onclick="toggleFolder('__unc__',event)">'
-      +'<i class="ti ti-chevron-right folder-icon'+(uncOpen?' open':'')+'"></i>'
-      +'<span style="font-size:13px;">📋</span>'
-      +'<span class="folder-name">미분류</span>'
-      +'<span class="folder-count">'+uncat.length+'명</span>'
-      +'</div>'
-      +'<div class="folder-children'+(uncOpen?' open':'')+'">'
-      +'<div class="folder-drop-zone" id="dz-__none__"'
-      +' ondragover="onDropZoneDragOver(event,'__none__')"'
-      +' ondragleave="onDropZoneDragLeave('__none__')"'
-      +' ondrop="onDropZoneDrop(event,'__none__')">'
-      +(uncatVis.length===0?'<div style="padding:8px;font-size:10px;color:rgba(255,255,255,.2);text-align:center">드래그로 학생 이동</div>':'')
-      +uncatVis.map(renderStudent).join('')
-      +'</div></div></div>';
-  }
-
-  list.innerHTML=html||'<div style="padding:16px;font-size:12px;color:rgba(255,255,255,.35);text-align:center">검색 결과 없음</div>';
-}
-
-function filterStudents(){renderSidebar();}
-function onCbChange(){var n=document.querySelectorAll('.student-cb:checked').length;document.getElementById('sel-count').style.display=n?'block':'none';document.getElementById('sel-count').textContent=n+'명 선택됨';document.getElementById('btn-bulk').style.display=n?'flex':'none';}
-function getChecked(){return students.filter(function(s){var el=document.getElementById('cb-'+s.id);return el&&el.checked;});}
-
-// ── 학생 CRUD ──────────────────────────────────────────────────
-function newStudent(){if(isDirty&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;currentId='s_'+Date.now();isDirty=false;renderForm({id:currentId});setTimeout(function(){var el=document.getElementById('f-name');if(el)el.focus();},50);}
-function selectStudent(id){if(isDirty&&currentId!==id&&!confirm('저장하지 않은 변경사항이 있습니다. 계속하시겠어요?'))return;currentId=id;isDirty=false;renderForm(students.find(function(x){return x.id===id;})||{id:id});renderSidebar();}
-function saveStudent(){
-  var s=collectForm();
-  if(!s){showToast('학생명을 입력해 주세요.');return;}
-  s.updatedAt=Date.now();
-  var ex=students.find(function(x){return x.id===currentId;});
-  if(ex)Object.assign(ex,s);else students.unshift(s);
-  isDirty=false;
-  document.getElementById('editing-badge').style.display='none';
-  document.getElementById('btn-del').style.display='flex';
-  renderSidebar();
-  // 구글 시트에 저장
-  persist(s);
-}
-function deleteStudent(){
-  if(!currentId||!confirm('삭제할까요?'))return;
-  var delId=currentId;
-  gasDelete(delId).then(function(res){
-    if(!res.ok){ showToast('삭제 실패: '+(res.error||'')); return; }
-    students=students.filter(function(x){return x.id!==delId;});
-    currentId=null; isDirty=false; renderSidebar(); showEmpty();
-    showToast('삭제됐어요!');
-  });
-}
-
-// ── 오답 토글 (점수 초과 방지) ───────────────────────────────
-function toggleWrong(areaKey, q){
-  var btn=document.getElementById('wq-'+currentId+'-'+q);
-  if(!btn)return;
-  var isCurrentlyWrong=btn.classList.contains('wrong');
-
-  if(!isCurrentlyWrong){
-    // 추가하려는 경우 → 점수 초과 체크
-    var lv=document.getElementById('f-level')&&document.getElementById('f-level').value;
-    var cfg=LEVEL_CFG[lv];
-    var area=cfg&&cfg.areas.find(function(a){return a.key===areaKey;});
-    if(area){
-      var inputScoreEl=document.getElementById('sc-'+areaKey);
-      var inputScore=inputScoreEl?parseFloat(inputScoreEl.value):null;
-      if(inputScore!=null&&!isNaN(inputScore)){
-        // ★ 핵심 수정: 균등 배점(max/문항수) 대신 최솟값 배점 기준으로 허용 오답 수 계산
-        // Grammar처럼 마지막 문항만 4점이고 나머지 3점인 경우
-        // 13/4=3.25 소수점 계산은 오차 발생 → Math.round로 실제 배점 3점을 구함
-        var lostPts=area.max-inputScore;
-        var minPtPerQ=Math.round(area.max/area.qs.length);
-        if(minPtPerQ<1)minPtPerQ=1;
-        var maxWrongAllowed=Math.floor(lostPts/minPtPerQ);
-        var currentWrongCount=area.qs.filter(function(qn){
-          var b=document.getElementById('wq-'+currentId+'-'+qn);
-          return b&&b.classList.contains('wrong');
-        }).length;
-        if(currentWrongCount>=maxWrongAllowed){
-          showToast('입력한 점수('+inputScore+'점)로는 오답을 최대 '+maxWrongAllowed+'개까지 체크할 수 있어요.');
-          return;
-        }
-      }
+    var uncHtml='';
+    if(uncatVis.length===0){
+      uncHtml='<div style="padding:8px;font-size:10px;color:rgba(255,255,255,.2);text-align:center">드래그로 학생 이동</div>';
+    } else {
+      uncatVis.forEach(function(s){uncHtml+=makeStudentItem(s);});
     }
+    rows.push(
+      '<div class="folder-section">'
+        +'<div class="folder-header" onclick="toggleFolder('__unc__',event)">'
+          +'<i class="ti ti-chevron-right folder-icon'+(uncOpen?' open':'')+'"></i>'
+          +'<span style="font-size:13px">📋</span>'
+          +'<span class="folder-name">미분류</span>'
+          +'<span class="folder-count">'+uncat.length+'명</span>'
+        +'</div>'
+        +'<div class="folder-children'+(uncOpen?' open':'')+'">'
+          +'<div class="folder-drop-zone" id="dz-__none__"'
+            +' ondragover="onDropZoneDragOver(event,'__none__')"'
+            +' ondragleave="onDropZoneDragLeave('__none__')"'
+            +' ondrop="onDropZoneDrop(event,'__none__')">'
+            +uncHtml
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    );
   }
 
-  btn.classList.toggle('wrong');
-  markDirty();
+  list.innerHTML=rows.length?rows.join(''):'<div style="padding:16px;font-size:12px;color:rgba(255,255,255,.35);text-align:center">검색 결과 없음</div>';
 }
 
-function onLevelChange(){markDirty();var lv=document.getElementById('f-level')&&document.getElementById('f-level').value;var cfg=LEVEL_CFG[lv];var sf=document.getElementById('score-fields');if(sf)sf.innerHTML=buildScoreFields(cfg,{});var wf=document.getElementById('wrong-fields');if(wf)wf.innerHTML=buildWrongFields(cfg,[]);var af=document.getElementById('avg-fields');if(af)af.innerHTML=buildAvgFields(cfg,{});var fsT=document.querySelector('#score-section .fs-title');if(fsT){var lbl=cfg?' <span style="font-size:10px;font-weight:400;color:var(--color-text-secondary);margin-left:4px">('+cfg.label+')</span>':'';fsT.innerHTML='<i class="ti ti-chart-bar"></i>영역별 점수'+lbl;}}
-function buildScoreFields(cfg,scores){scores=scores||{};if(!cfg)return'';var h='';for(var n=1;n<=4;n++){var k='a'+n,area=null;for(var i=0;i<cfg.areas.length;i++)if(cfg.areas[i].n===n){area=cfg.areas[i];break;}var val=scores[k]!==undefined?scores[k]:'';if(area)h+='<div class="fg"><label>영역'+n+' · '+area.name+'</label><input type="number" id="sc-'+k+'" min="0" max="'+area.max+'" value="'+val+'" placeholder="0~'+area.max+'" oninput="markDirty()"><div class="score-hint">배점 '+area.max+'점</div></div>';else h+='<div class="fg fg-disabled"><label>영역'+n+'</label><input type="number" disabled placeholder="해당 없음"></div>';}return h;}
-function buildWrongFields(cfg,wrongs){wrongs=wrongs||[];if(!cfg)return'<div style="font-size:12px;color:var(--color-text-secondary)">시험지 레벨을 먼저 선택해 주세요.</div>';var id=currentId||'tmp';return cfg.areas.map(function(area){var clr=area.color||'#2b6cb0';var btns=area.qs.map(function(q){var isW=wrongs.indexOf(q)>=0;return'<button class="wq-btn'+(isW?' wrong':'')+'" id="wq-'+id+'-'+q+'" onclick="toggleWrong(\''+area.key+'\','+q+')">'+q+'</button>';}).join('');return'<div style="margin-bottom:7px"><span class="area-badge" style="background:'+clr+'22;color:'+clr+';border:0.5px solid '+clr+'44">'+area.name+'</span><div class="wrong-grid">'+btns+'</div></div>';}).join('');}
-function buildAvgFields(cfg,avgs){avgs=avgs||{};if(!cfg)return'';var h='';for(var n=1;n<=4;n++){var k='a'+n,area=null;for(var i=0;i<cfg.areas.length;i++)if(cfg.areas[i].n===n){area=cfg.areas[i];break;}var av=avgs[k]!==undefined?avgs[k]:'';if(area)h+='<div class="fg"><label>영역'+n+' 평균 · '+area.name+'</label><input type="number" id="av-'+k+'" value="'+av+'" placeholder="평균 점수" oninput="markDirty()"></div>';else h+='<div class="fg fg-disabled"><label>영역'+n+' 평균</label><input type="number" disabled placeholder="—"></div>';}return h;}
-function toggleAvg(){markDirty();var show=document.getElementById('chk-avg')&&document.getElementById('chk-avg').checked;var sec=document.getElementById('avg-section');if(sec)sec.classList.toggle('visible',!!show);}
-function togglePretest(){markDirty();var show=document.getElementById('chk-pretest')&&document.getElementById('chk-pretest').checked;var body=document.getElementById('pretest-body');if(body)body.classList.toggle('visible',!!show);}
-function updatePretestBar(step){var sc=document.getElementById('pt-sc-'+step),bar=document.getElementById('pt-bar-'+step),pct=document.getElementById('pt-pct-'+step);if(!sc||!bar||!pct)return;var v=parseInt(sc.value)||0;bar.style.width=(v*10)+'%';pct.textContent=(v*10)+'%';markDirty();}
+function makeStudentItem(s){
+  return '<div class="student-item'+(s.id===currentId?' active':'')+'" id="si-'+s.id+'"'
+    +' draggable="true"'
+    +' ondragstart="onDragStart(this,''+s.id+'',event)"'
+    +' ondragend="onDragEnd(''+s.id+'')">'
+    +'<input type="checkbox" class="student-cb" id="cb-'+s.id+'" onchange="onCbChange()" onclick="event.stopPropagation()">'
+    +'<div class="student-info" onclick="selectStudent(''+s.id+'')">'
+      +'<div class="student-name">'+(s.name||'이름 없음')
+        +(s.memberCode?'<span style="font-size:9px;color:rgba(255,255,255,.35);margin-left:4px">'+s.memberCode+'</span>':'')
+      +'</div>'
+      +'<div class="student-meta">'+(s.testLevel||'—')+' · '+(s.grade?'초등'+s.grade+'학년':'학년미정')+'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+
+function buildFolderSelect(currentFolder){
+  var opts='<option value="">미분류</option>';
+  folders.forEach(function(f){
+    opts+='<option value="'+f.id+'"'+(currentFolder===f.id?' selected':'')+'>'+f.name+'</option>';
+  });
+  return '<select id="f-folder" onchange="markDirty()">'+opts+'</select>';
+}
 
 function renderForm(s){
   s=s||{};
@@ -780,7 +734,7 @@ function renderForm(s){
     +'<div class="fg"><label>수업 시작</label><select id="f-start" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+(s.testDate?buildStartOpts(s.testDate,s.startSem||''):'')+'</select></div>'
     +'<div class="fg"><label>시험지 레벨</label><select id="f-level" onchange="onLevelChange()"><option value="">선택</option>'+lvOpts+'</select></div>'
     +'<div class="fg"><label>CHESS 배치 레벨</label><select id="f-chess" onchange="markDirty();renderRoadmap()"><option value="">선택</option>'+chOpts+'</select></div>'
-    +'<div class="fg"><label>학기 폴더</label><select id="f-folder" onchange="markDirty()"><option value="">미분류</option>'+folders.map(function(f){return\'<option value="\'+f.id+\'"\'+((s.folder===f.id)?\'  selected\':\'\')+\'>\'+ f.name+\'</option>\';}).join(\'\')+'</select></div>'
+    +'<div class="fg"><label>학기 폴더</label>'+buildFolderSelect(s.folder||'')+'</div>'
     +'</div></div>'
     +'<div class="form-section pretest-section"><div class="pretest-title-row fs-title" style="margin-bottom:0"><span class="pretest-title-text"><i class="ti ti-device-laptop"></i>Online Pre-Test</span><label class="toggle-wrap"><input type="checkbox" id="chk-pretest"'+(showPretest?' checked':'')+' onchange="togglePretest()"><span class="toggle-track"></span></label><span style="font-size:11px;color:#2d7a4f;font-weight:500">입력하기</span></div>'
     +'<div class="pretest-body'+(showPretest?' visible':'')+'" id="pretest-body"><div class="pretest-layout"><div class="pretest-left"><div class="pretest-left-label">현재 영어 학습 능력</div><select id="f-history" onchange="markDirty()" style="font-size:12px;width:100%;border-color:#9ecf9e;background:#f5fbf5;border-radius:6px;padding:5px 8px">'+histOpts+'</select>'+histText+'</div>'
