@@ -418,15 +418,29 @@ var folders = [];
 var _dragId = null;
 
 function loadFolders() {
+  // 먼저 로컬에서 빠르게 로드
   try {
     var raw = localStorage.getItem('chess_folders');
     folders = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(folders)) folders = [];
   } catch(e) { folders = []; }
+  // 구글 시트에서 최신 동기화
+  gasJsonp({ action: 'getFolders' }).then(function(res) {
+    if (res.ok && Array.isArray(res.folders)) {
+      folders = res.folders;
+      try { localStorage.setItem('chess_folders', JSON.stringify(folders)); } catch(e) {}
+      renderSidebar();
+    }
+  });
 }
 
 function saveFolders() {
+  // 로컬 저장
   try { localStorage.setItem('chess_folders', JSON.stringify(folders)); } catch(e) {}
+  // 구글 시트 동기화
+  gasJsonp({ action: 'saveFolders', data: folders }).then(function(res) {
+    if (!res.ok) console.log('폴더 저장 실패:', res.error);
+  });
 }
 
 function addFolder() {
@@ -509,10 +523,13 @@ function attachSidebarDelegation() {
   });
 
   list.addEventListener('dragstart', function(e) {
-    var item = e.target.closest('[data-sid]');
+    // student-item 또는 그 하위 요소에서 드래그 시작
+    var item = e.target.closest('.student-item[draggable]');
     if (!item) return;
     _dragId = item.getAttribute('data-sid');
+    if (!_dragId) return;
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', _dragId);
     setTimeout(function(){ item.classList.add('dragging'); }, 0);
   });
   list.addEventListener('dragend', function() {
@@ -533,11 +550,13 @@ function attachSidebarDelegation() {
   });
   list.addEventListener('drop', function(e) {
     var zone = e.target.closest('.drop-target');
-    if (!zone || !_dragId) return;
+    if (!zone) return;
     e.preventDefault();
     zone.classList.remove('drag-over');
+    var sid = _dragId || e.dataTransfer.getData('text/plain');
+    if (!sid) return;
     var fid = zone.getAttribute('data-fid');
-    moveToFolder(_dragId, fid === '__none__' ? '' : fid);
+    moveToFolder(sid, fid === '__none__' ? '' : fid);
     _dragId = null;
   });
 
@@ -610,7 +629,7 @@ function renderSidebar() {
       + '<div class="folder-hd" data-fid="__unc__">'
         + '<span class="folder-chevron' + (uncOpen ? ' open' : '') + '">&#9654;</span>'
         + '<span style="font-size:13px">&#128203;</span>'
-        + '<span class="folder-label">&#48120;&#48516;&#47448;</span>'
+        + '<span class="folder-label">미분류</span>'
         + '<span class="folder-cnt">' + uncat.length + '&#47679;</span>'
       + '</div>'
       + '<div class="folder-body' + (uncOpen ? ' open' : '') + '">'
@@ -620,9 +639,9 @@ function renderSidebar() {
   }
 
   if (!html && !students.length) {
-    html = '<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">&#46321;&#47197;&#46108; &#54617;&#49373;&#51060; &#50630;&#50612;&#50836;</div>';
+    html = '<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">등록된 학생이 없어요</div>';
   }
-  list.innerHTML = html || '<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">&#44160;&#49353; &#44208;&#44284; &#50630;&#51020;</div>';
+  list.innerHTML = html || '<div style="padding:14px;font-size:12px;color:rgba(255,255,255,.4);text-align:center">검색 결과 없음</div>';
   attachSidebarDelegation();
 }
 
@@ -1764,6 +1783,4 @@ function showEmpty(){
 }
 
 loadStudents();
-</script>
-</body>
-</html>
+tml>
