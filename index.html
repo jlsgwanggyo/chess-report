@@ -791,6 +791,7 @@ function buildWrongFields(cfg, wrongs) {
 }
 
 function buildAvgFields(cfg, avgs, avgMode) {
+  if (!cfg) return '';
   avgs = avgs || {};
   avgMode = avgMode || 'score'; // 'score' or 'pct'
   var h = '';
