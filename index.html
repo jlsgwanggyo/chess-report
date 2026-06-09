@@ -270,6 +270,13 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
 .drop-target.drag-over{background:rgba(96,165,250,.15);outline:2px dashed rgba(96,165,250,.4);}
 .student-item.dragging{opacity:.4;}
 
+/* ── 설문 체크박스 ── */
+.sv-checks{display:flex;flex-wrap:wrap;gap:6px;}
+.sv-check-label{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--gray-700);background:#fff;border:1px solid #d1d5db;border-radius:20px;padding:4px 10px;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none;}
+.sv-check-label:hover{border-color:#93c5fd;background:#eff6ff;}
+.sv-check-label input[type=checkbox]{accent-color:#3b82f6;width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+.sv-check-label:has(input:checked){background:#eff6ff;border-color:#3b82f6;color:#1d4ed8;}
+
 @media print{
   .print-toolbar{display:none!important;}
   .print-cards{padding:0!important;max-width:100%!important;}
@@ -880,6 +887,15 @@ function limitAvgInput(el, max) {
   if (v > max) { el.value = max; showToast('최대 ' + max + (max === 100 ? '%' : '점') + '까지 입력할 수 있어요.'); }
 }
 
+function toggleSvEtc(chkId, inputId) {
+  var chk = document.getElementById(chkId);
+  var inp = document.getElementById(inputId);
+  if (!chk || !inp) return;
+  inp.style.display = chk.checked ? 'block' : 'none';
+  if (chk.checked) inp.focus();
+  else inp.value = '';
+}
+
 function toggleAvg() {
   markDirty();
   var show = document.getElementById('chk-avg') && document.getElementById('chk-avg').checked;
@@ -1042,9 +1058,45 @@ function renderForm(s){
     +'</div></div>'
     +'<div class="form-section"><div class="fs-title"><i class="ti ti-message"></i>안내사항</div><div class="fg"><textarea id="f-notice" placeholder="Interview 코멘트 등" oninput="markDirty()">'+(s.notice||'')+'</textarea></div></div>'
     +'<div class="form-section" style="border:1.5px solid #e0eeff;background:#f7faff;border-radius:8px;padding:14px 16px"><div class="fs-title" style="color:#2c5282"><i class="ti ti-users"></i>입학 설문 <span style="font-size:10px;font-weight:400;color:#8aa8c0;margin-left:6px">— 종합의견에 자동 반영됩니다</span></div>'
-    +'<div class="fg"><label>학습태도 및 강점</label><textarea id="f-sv-strength" placeholder="예: 숙제를 잘 합니다 / 듣기에 자신감이 있어요" oninput="markDirty()" style="min-height:52px">'+(((s.survey||{}).strength)||'')+'</textarea></div>'
-    +'<div class="fg"><label>약점</label><textarea id="f-sv-weakness" placeholder="예: 스피킹이 약해요 / 문법을 어려워해요" oninput="markDirty()" style="min-height:52px">'+(((s.survey||{}).weakness)||'')+'</textarea></div>'
-    +'<div class="fg"><label>정상어학원에 바라는 점</label><textarea id="f-sv-wish" placeholder="예: 즐겁게 수업하고 영어에 자신감이 생겼으면 좋겠습니다" oninput="markDirty()" style="min-height:52px">'+(((s.survey||{}).wish)||'')+'</textarea></div>'
+
+    // ── 강점 체크박스
+    +'<div class="fg" style="margin-bottom:10px"><label style="margin-bottom:6px;display:block">학습태도 및 강점 <span style="font-weight:400;color:#8aa8c0;font-size:10px">(복수 선택 가능)</span></label>'
+    +'<div class="sv-checks" id="sv-strength-checks">'
+    +['듣기를 잘해요','독해가 좋아요','단어를 잘 외워요','문법이 괜찮아요','스피킹을 잘해요','숙제를 잘 해요','성실하고 열심히 해요'].map(function(opt){
+      var checked = ((s.survey||{}).strengthChecks||[]).indexOf(opt) >= 0 ? 'checked' : '';
+      return '<label class="sv-check-label"><input type="checkbox" class="sv-chk sv-strength-chk" value="'+opt+'" '+checked+' onchange="markDirty()"><span>'+opt+'</span></label>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-top:6px">'
+    +'<label class="sv-check-label" style="flex-shrink:0"><input type="checkbox" id="sv-strength-etc-chk" '+(((s.survey||{}).strengthEtc||'').trim()?'checked':'')+' onchange="toggleSvEtc(\'sv-strength-etc-chk\',\'sv-strength-etc\');markDirty()"><span>기타</span></label>'
+    +'<input type="text" id="sv-strength-etc" placeholder="직접 입력" value="'+((s.survey||{}).strengthEtc||'')+'" oninput="markDirty()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;'+(((s.survey||{}).strengthEtc||'').trim()?'':'display:none')+'">'
+    +'</div></div>'
+
+    // ── 약점 체크박스
+    +'<div class="fg" style="margin-bottom:10px"><label style="margin-bottom:6px;display:block">약점 <span style="font-weight:400;color:#8aa8c0;font-size:10px">(복수 선택 가능)</span></label>'
+    +'<div class="sv-checks" id="sv-weakness-checks">'
+    +['듣기가 약해요','독해를 어려워해요','어휘가 부족해요','문법이 약해요','스피킹이 약해요','긴 글을 싫어해요','집중력이 부족해요'].map(function(opt){
+      var checked = ((s.survey||{}).weaknessChecks||[]).indexOf(opt) >= 0 ? 'checked' : '';
+      return '<label class="sv-check-label"><input type="checkbox" class="sv-chk sv-weakness-chk" value="'+opt+'" '+checked+' onchange="markDirty()"><span>'+opt+'</span></label>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-top:6px">'
+    +'<label class="sv-check-label" style="flex-shrink:0"><input type="checkbox" id="sv-weakness-etc-chk" '+(((s.survey||{}).weaknessEtc||'').trim()?'checked':'')+' onchange="toggleSvEtc(\'sv-weakness-etc-chk\',\'sv-weakness-etc\');markDirty()"><span>기타</span></label>'
+    +'<input type="text" id="sv-weakness-etc" placeholder="직접 입력" value="'+((s.survey||{}).weaknessEtc||'')+'" oninput="markDirty()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;'+(((s.survey||{}).weaknessEtc||'').trim()?'':'display:none')+'">'
+    +'</div></div>'
+
+    // ── 바라는점 체크박스
+    +'<div class="fg" style="margin-bottom:4px"><label style="margin-bottom:6px;display:block">정상어학원에 바라는 점 <span style="font-weight:400;color:#8aa8c0;font-size:10px">(복수 선택 가능)</span></label>'
+    +'<div class="sv-checks" id="sv-wish-checks">'
+    +['즐겁게 수업했으면 좋겠어요','영어에 자신감이 생겼으면 해요','꼼꼼하게 관리해 주세요','어휘를 체계적으로 잡았으면 해요','문법을 잡고 싶어요','독해력을 키우고 싶어요','스피킹을 늘리고 싶어요','듣기를 키우고 싶어요','장기 로드맵이 궁금해요'].map(function(opt){
+      var checked = ((s.survey||{}).wishChecks||[]).indexOf(opt) >= 0 ? 'checked' : '';
+      return '<label class="sv-check-label"><input type="checkbox" class="sv-chk sv-wish-chk" value="'+opt+'" '+checked+' onchange="markDirty()"><span>'+opt+'</span></label>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-top:6px">'
+    +'<label class="sv-check-label" style="flex-shrink:0"><input type="checkbox" id="sv-wish-etc-chk" '+(((s.survey||{}).wishEtc||'').trim()?'checked':'')+' onchange="toggleSvEtc(\'sv-wish-etc-chk\',\'sv-wish-etc\');markDirty()"><span>기타</span></label>'
+    +'<input type="text" id="sv-wish-etc" placeholder="직접 입력" value="'+((s.survey||{}).wishEtc||'')+'" oninput="markDirty()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;'+(((s.survey||{}).wishEtc||'').trim()?'':'display:none')+'">'
+    +'</div></div>'
     +'</div>'
     +'<div class="form-section"><div class="fs-title"><i class="ti ti-map"></i>CHESS 과정 로드맵</div><div id="roadmap-wrap"><div style="font-size:12px;color:var(--color-text-secondary)">학년, 시험일, 수업시작, 배치 레벨을 모두 입력하면 자동 생성됩니다.</div></div><div style="font-size:10px;color:var(--color-text-secondary);margin-top:5px">위 로드맵은 학사 운영 기준에 따른 기본 학습 경로입니다. 학생의 학기말 성취도 평가(DT) 결과에 따라 개인별 학습 단계는 달라질 수 있습니다.</div></div>';
   renderRoadmap(s);
@@ -1096,10 +1148,20 @@ function collectForm(){
   var wrongSet=[];if(cfg)cfg.areas.forEach(function(area){area.qs.forEach(function(q){var btn=document.getElementById('wq-'+currentId+'-'+q);if(btn&&btn.classList.contains('wrong'))wrongSet.push(q);});});
   var pretest={};[1,2,3].forEach(function(step){var lv2=document.getElementById('pt-lv-'+step),sc2=document.getElementById('pt-sc-'+step);pretest[step]={level:lv2?lv2.value:'',score:sc2&&sc2.value!==''?parseInt(sc2.value):null};});
   var histEl=document.getElementById('f-history'),learningHistory=histEl&&histEl.value!==''?parseInt(histEl.value):null;
+  function getCheckedValues(cls) {
+    return Array.from(document.querySelectorAll('input.'+cls+':checked')).map(function(el){ return el.value; });
+  }
   var survey = {
-    strength: (document.getElementById('f-sv-strength')&&document.getElementById('f-sv-strength').value||'').trim(),
-    weakness: (document.getElementById('f-sv-weakness')&&document.getElementById('f-sv-weakness').value||'').trim(),
-    wish:     (document.getElementById('f-sv-wish')&&document.getElementById('f-sv-wish').value||'').trim()
+    strengthChecks: getCheckedValues('sv-strength-chk'),
+    strengthEtc:    (document.getElementById('sv-strength-etc')&&document.getElementById('sv-strength-etc').value||'').trim(),
+    weaknessChecks: getCheckedValues('sv-weakness-chk'),
+    weaknessEtc:    (document.getElementById('sv-weakness-etc')&&document.getElementById('sv-weakness-etc').value||'').trim(),
+    wishChecks:     getCheckedValues('sv-wish-chk'),
+    wishEtc:        (document.getElementById('sv-wish-etc')&&document.getElementById('sv-wish-etc').value||'').trim(),
+    // extractSurveyTags에서 사용할 텍스트 합산
+    strength: [].concat(getCheckedValues('sv-strength-chk'), (document.getElementById('sv-strength-etc')&&document.getElementById('sv-strength-etc').value||'').trim() ? [(document.getElementById('sv-strength-etc').value||'').trim()] : []).join(' '),
+    weakness: [].concat(getCheckedValues('sv-weakness-chk'), (document.getElementById('sv-weakness-etc')&&document.getElementById('sv-weakness-etc').value||'').trim() ? [(document.getElementById('sv-weakness-etc').value||'').trim()] : []).join(' '),
+    wish:     [].concat(getCheckedValues('sv-wish-chk'),     (document.getElementById('sv-wish-etc')&&document.getElementById('sv-wish-etc').value||'').trim()     ? [(document.getElementById('sv-wish-etc').value||'').trim()]     : []).join(' ')
   };
   var showPretest=!!(document.getElementById('chk-pretest')&&document.getElementById('chk-pretest').checked);
   var timeEl=document.getElementById('f-time'),classTime=timeEl&&timeEl.value==='__c__'?(document.getElementById('f-time-c')&&document.getElementById('f-time-c').value||''):(timeEl?timeEl.value:'');
