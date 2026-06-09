@@ -277,6 +277,7 @@ body{font-family:var(--font-sans);font-size:13px;color:var(--gray-900);backgroun
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="app" id="app-main">
@@ -1747,9 +1748,24 @@ function buildReportHtml(s,analysis){
 
 function excelDateToStr(v){
   if(!v)return'';
+  // 숫자형 → 엑셀 시리얼 날짜 변환 (예: 46163 → 2026-05-26)
+  if(typeof v==='number'){
+    var d=new Date(Math.round((v-25569)*86400*1000));
+    var y=d.getUTCFullYear();
+    var mo=String(d.getUTCMonth()+1).padStart(2,'0');
+    var day=String(d.getUTCDate()).padStart(2,'0');
+    return y+'-'+mo+'-'+day;
+  }
   if(typeof v==='string'){
+    // 이미 날짜 문자열인 경우
     var m=v.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
     if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+    // 숫자 문자열인 경우
+    var n=parseFloat(v);
+    if(!isNaN(n)&&n>40000){
+      var d2=new Date(Math.round((n-25569)*86400*1000));
+      return d2.getUTCFullYear()+'-'+String(d2.getUTCMonth()+1).padStart(2,'0')+'-'+String(d2.getUTCDate()).padStart(2,'0');
+    }
   }
   return String(v);
 }
